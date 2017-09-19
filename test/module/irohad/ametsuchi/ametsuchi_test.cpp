@@ -18,6 +18,7 @@
 #include <gtest/gtest.h>
 #include "ametsuchi/impl/storage_impl.hpp"
 #include "common/byteutils.hpp"
+#include "crypto/hash.hpp"
 #include "framework/test_subscriber.hpp"
 #include "model/commands/add_asset_quantity.hpp"
 #include "model/commands/add_peer.hpp"
@@ -27,7 +28,7 @@
 #include "model/commands/create_domain.hpp"
 #include "model/commands/remove_signatory.hpp"
 #include "model/commands/transfer_asset.hpp"
-#include "model/model_hash_provider_impl.hpp"
+#include "model/converters/pb_block_factory.hpp"
 #include "module/irohad/ametsuchi/ametsuchi_fixture.hpp"
 
 using namespace iroha::ametsuchi;
@@ -55,8 +56,6 @@ TEST_F(AmetsuchiTest, GetBlocksCompletedWhenCalled) {
 }
 
 TEST_F(AmetsuchiTest, SampleTest) {
-  HashProviderImpl hashProvider;
-
   auto storage =
       StorageImpl::create(block_store_path, redishost_, redisport_, pgopt_);
   ASSERT_TRUE(storage);
@@ -77,7 +76,7 @@ TEST_F(AmetsuchiTest, SampleTest) {
   block.transactions.push_back(txn);
   block.height = 1;
   block.prev_hash.fill(0);
-  auto block1hash = hashProvider.get_hash(block);
+  auto block1hash = iroha::sha3_256(block);
   block.hash = block1hash;
   block.txs_number = block.transactions.size();
 
@@ -132,7 +131,7 @@ TEST_F(AmetsuchiTest, SampleTest) {
   block.transactions.push_back(txn);
   block.height = 2;
   block.prev_hash = block1hash;
-  auto block2hash = hashProvider.get_hash(block);
+  auto block2hash = iroha::sha3_256(block);
   block.hash = block2hash;
   block.txs_number = block.transactions.size();
 
@@ -204,8 +203,6 @@ TEST_F(AmetsuchiTest, PeerTest) {
 }
 
 TEST_F(AmetsuchiTest, queryGetAccountAssetTransactionsTest) {
-  HashProviderImpl hashProvider;
-
   auto storage = StorageImpl::create(block_store_path, redishost_, redisport_, pgopt_);
   ASSERT_TRUE(storage);
   auto wsv = storage->getWsvQuery();
@@ -267,7 +264,7 @@ TEST_F(AmetsuchiTest, queryGetAccountAssetTransactionsTest) {
   block.transactions.push_back(txn);
   block.height = 1;
   block.prev_hash.fill(0);
-  auto block1hash = hashProvider.get_hash(block);
+  auto block1hash = iroha::sha3_256(block);
   block.hash = block1hash;
   block.txs_number = static_cast<uint16_t>(block.transactions.size());
 
@@ -319,7 +316,7 @@ TEST_F(AmetsuchiTest, queryGetAccountAssetTransactionsTest) {
   block.transactions.push_back(txn);
   block.height = 2;
   block.prev_hash = block1hash;
-  auto block2hash = hashProvider.get_hash(block);
+  auto block2hash = iroha::sha3_256(block);
   block.hash = block2hash;
   block.txs_number = static_cast<uint16_t>(block.transactions.size());
 
@@ -364,7 +361,7 @@ TEST_F(AmetsuchiTest, queryGetAccountAssetTransactionsTest) {
   block.transactions.push_back(txn);
   block.height = 3;
   block.prev_hash = block2hash;
-  auto block3hash = hashProvider.get_hash(block);
+  auto block3hash = iroha::sha3_256(block);
   block.hash = block3hash;
   block.txs_number = static_cast<uint16_t>(block.transactions.size());
 

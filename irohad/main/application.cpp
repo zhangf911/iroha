@@ -90,7 +90,6 @@ void Irohad::run() {
   log_->info("[Init] => crypto provider");
 
   // Hash provider
-  auto hash_provider = std::make_shared<HashProviderImpl>();
   log_->info("[Init] => hash provider");
 
   // Validators:
@@ -114,7 +113,7 @@ void Irohad::run() {
   // Simulator
   auto simulator =
       createSimulator(ordering_gate, stateful_validator,
-                      storage->getBlockQuery(), storage, hash_provider);
+                      storage->getBlockQuery(), storage);
 
   // Block loader
   auto block_loader = loader_init.initBlockLoader(wsv, storage->getBlockQuery(),
@@ -180,11 +179,9 @@ std::shared_ptr<Simulator> Irohad::createSimulator(
     std::shared_ptr<OrderingGate> ordering_gate,
     std::shared_ptr<StatefulValidator> stateful_validator,
     std::shared_ptr<BlockQuery> block_query,
-    std::shared_ptr<TemporaryFactory> temporary_factory,
-    std::shared_ptr<HashProviderImpl> hash_provider) {
+    std::shared_ptr<TemporaryFactory> temporary_factory) {
   return std::make_shared<Simulator>(ordering_gate, stateful_validator,
-                                     temporary_factory, block_query,
-                                     hash_provider);
+                                     temporary_factory, block_query);
 }
 
 std::shared_ptr<PeerCommunicationService>

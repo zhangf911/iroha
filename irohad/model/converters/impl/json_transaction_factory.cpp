@@ -18,6 +18,7 @@
 #include "model/converters/json_transaction_factory.hpp"
 
 #include <algorithm>
+#include "crypto/hash.hpp"
 #include "model/converters/json_common.hpp"
 
 using namespace rapidjson;
@@ -84,7 +85,7 @@ namespace iroha {
             | des.Array(&Transaction::signatures, "signatures")
             | des.Array(&Transaction::commands, "commands", des_commands)
             | [this](auto transaction) {
-                transaction.tx_hash = hash_provider_.get_hash(transaction);
+                transaction.tx_hash = sha3_256(transaction);
                 return nonstd::make_optional(transaction);
               };
       }
