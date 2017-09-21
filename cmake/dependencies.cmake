@@ -85,4 +85,4 @@ find_package(tbb)
 ##########################
 # boost multiprecision   #
 ##########################
-find_package(Boost REQUIRED)
+find_package(boostmultiprecision)
