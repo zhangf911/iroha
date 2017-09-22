@@ -9,6 +9,4 @@ add_library(model_generators
 target_link_libraries(model_generators
     optional
     generator
-    model
-    logger
     )
