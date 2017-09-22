@@ -16,6 +16,7 @@
  */
 
 #include <gtest/gtest.h>
+#include "crypto/hash.hpp"
 #include "model/converters/pb_query_factory.hpp"
 #include "model/generators/query_generator.hpp"
 
@@ -31,7 +32,7 @@ TEST(PbQueryFactoryTest, SerializeGetAccount){
   auto res_query = queryFactory.deserialize(pb_query.value());
   ASSERT_TRUE(res_query.has_value());
   // TODO: overload operator == for queries and replace with it
-  ASSERT_EQ(res_query.value()->query_hash, query->query_hash);
+  ASSERT_EQ(iroha::hash(*res_query.value()), iroha::hash(*query));
 }
 
 TEST(PbQueryFactoryTest, SerializeGetAccountAssets){
@@ -43,7 +44,7 @@ TEST(PbQueryFactoryTest, SerializeGetAccountAssets){
   auto res_query = queryFactory.deserialize(pb_query.value());
   ASSERT_TRUE(res_query.has_value());
   // TODO: overload operator == for queries and replace with it
-  ASSERT_EQ(res_query.value()->query_hash, query->query_hash);
+  ASSERT_EQ(iroha::hash(*res_query.value()), iroha::hash(*query));
 }
 
 TEST(PbQueryFactoryTest, SerializeGetAccountTransactions){
@@ -55,7 +56,7 @@ TEST(PbQueryFactoryTest, SerializeGetAccountTransactions){
   auto res_query = queryFactory.deserialize(pb_query.value());
   ASSERT_TRUE(res_query.has_value());
   // TODO: overload operator == for queries and replace with it
-  ASSERT_EQ(res_query.value()->query_hash, query->query_hash);
+  ASSERT_EQ(iroha::hash(*res_query.value()), iroha::hash(*query));
 }
 
 TEST(PbQueryFactoryTest, SerializeGetSignatories){
@@ -67,5 +68,5 @@ TEST(PbQueryFactoryTest, SerializeGetSignatories){
   auto res_query = queryFactory.deserialize(pb_query.value());
   ASSERT_TRUE(res_query.has_value());
   // TODO: overload operator == for queries and replace with it
-  ASSERT_EQ(res_query.value()->query_hash, query->query_hash);
+  ASSERT_EQ(iroha::hash(*res_query.value()), iroha::hash(*query));
 }

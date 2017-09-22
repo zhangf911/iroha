@@ -32,7 +32,6 @@ namespace iroha {
         query->creator_account_id = creator;
         query->account_id = account_id;
         query->query_counter = query_counter;
-        query->query_hash = hash(*query);
         return query;
       }
 
@@ -45,7 +44,6 @@ namespace iroha {
         query->query_counter = query_counter;
         query->account_id = account_id;
         query->asset_id = asset_id;
-        query->query_hash = hash(*query);
         return query;
       }
 
@@ -57,7 +55,6 @@ namespace iroha {
         query->creator_account_id = creator;
         query->query_counter = query_counter;
         query->account_id = account_id;
-        query->query_hash = hash(*query);
         return query;
       }
 
@@ -69,7 +66,6 @@ namespace iroha {
         query->creator_account_id = creator;
         query->query_counter = query_counter;
         query->account_id = account_id;
-        query->query_hash = hash(*query);
         return query;
       }
 
@@ -82,7 +78,6 @@ namespace iroha {
         query->query_counter = query_counter;
         query->account_id = account_id;
         query->asset_id = asset_id;
-        query->query_hash = hash(*query);
         return query;
       }
 

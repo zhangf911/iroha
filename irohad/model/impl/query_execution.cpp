@@ -15,6 +15,7 @@
  * limitations under the License.
  */
 
+#include "crypto/hash.hpp"
 #include "model/query_execution.hpp"
 #include "model/queries/responses/account_assets_response.hpp"
 #include "model/queries/responses/account_response.hpp"
@@ -89,13 +90,13 @@ iroha::model::QueryProcessingFactory::executeGetAccount(
   auto acc = _wsvQuery->getAccount(query.account_id);
   if (!acc.has_value()) {
     iroha::model::ErrorResponse response;
-    response.query_hash = query.query_hash;
+    response.query_hash = iroha::hash(query);
     response.reason = iroha::model::ErrorResponse::NO_ACCOUNT;
     return std::make_shared<ErrorResponse>(response);
   }
   iroha::model::AccountResponse response;
   response.account = acc.value();
-  response.query_hash = query.query_hash;
+  response.query_hash = iroha::hash(query);
   return std::make_shared<iroha::model::AccountResponse>(response);
 }
 
@@ -105,7 +106,7 @@ iroha::model::QueryProcessingFactory::executeGetAccountAssets(
   auto acct_asset = _wsvQuery->getAccountAsset(query.account_id, query.asset_id);
   if (!acct_asset.has_value()) {
     iroha::model::ErrorResponse response;
-    response.query_hash = query.query_hash;
+    response.query_hash = iroha::hash(query);
     response.reason = iroha::model::ErrorResponse::NO_ACCOUNT_ASSETS;
     return std::make_shared<iroha::model::ErrorResponse>(response);
   }
@@ -113,7 +114,7 @@ iroha::model::QueryProcessingFactory::executeGetAccountAssets(
   // TODO: Add format with precision balance
   iroha::model::AccountAssetResponse response;
   response.acct_asset = acct_asset.value();
-  response.query_hash = query.query_hash;
+  response.query_hash = iroha::hash(query);
   return std::make_shared<iroha::model::AccountAssetResponse>(response);
 }
 
@@ -122,7 +123,7 @@ iroha::model::QueryProcessingFactory::executeGetAccountAssetTransactions(
     const model::GetAccountAssetTransactions& query) {
   auto acc_asset_tx = _blockQuery->getAccountAssetTransactions(query.account_id, query.asset_id);
   iroha::model::TransactionsResponse response;
-  response.query_hash = query.query_hash;
+  response.query_hash = iroha::hash(query);
   response.transactions = acc_asset_tx;
   return std::make_shared<iroha::model::TransactionsResponse>(response);
 }
@@ -132,7 +133,7 @@ iroha::model::QueryProcessingFactory::executeGetAccountTransactions(
     const model::GetAccountTransactions& query) {
   auto acc_tx = _blockQuery->getAccountTransactions(query.account_id);
   iroha::model::TransactionsResponse response;
-  response.query_hash = query.query_hash;
+  response.query_hash = iroha::hash(query);
   response.transactions = acc_tx;
   return std::make_shared<iroha::model::TransactionsResponse>(response);
 }
@@ -143,12 +144,12 @@ iroha::model::QueryProcessingFactory::executeGetSignatories(
   auto signs = _wsvQuery->getSignatories(query.account_id);
   if (!signs.has_value()) {
     iroha::model::ErrorResponse response;
-    response.query_hash = query.query_hash;
+    response.query_hash = iroha::hash(query);
     response.reason = model::ErrorResponse::NO_SIGNATORIES;
     return std::make_shared<iroha::model::ErrorResponse>(response);
   }
   iroha::model::SignatoriesResponse response;
-  response.query_hash = query.query_hash;
+  response.query_hash = iroha::hash(query);
   response.keys = signs.value();
   return std::make_shared<iroha::model::SignatoriesResponse>(response);
 }
@@ -161,7 +162,7 @@ iroha::model::QueryProcessingFactory::execute(
 
     if (!validate(*qry)) {
       iroha::model::ErrorResponse response;
-      response.query_hash = qry->query_hash;
+      response.query_hash = iroha::hash(*qry);
       response.reason = model::ErrorResponse::STATEFUL_INVALID;
       return std::make_shared<ErrorResponse>(response);
     }
@@ -172,7 +173,7 @@ iroha::model::QueryProcessingFactory::execute(
         std::static_pointer_cast<const iroha::model::GetAccountAssets>(query);
     if (!validate(*qry)) {
       iroha::model::ErrorResponse response;
-      response.query_hash = qry->query_hash;
+      response.query_hash = iroha::hash(*qry);
       response.reason = model::ErrorResponse::STATEFUL_INVALID;
       return std::make_shared<iroha::model::ErrorResponse>(response);
     }
@@ -183,7 +184,7 @@ iroha::model::QueryProcessingFactory::execute(
         std::static_pointer_cast<const iroha::model::GetSignatories>(query);
     if (!validate(*qry)) {
       iroha::model::ErrorResponse response;
-      response.query_hash = qry->query_hash;
+      response.query_hash = iroha::hash(*qry);
       response.reason = model::ErrorResponse::STATEFUL_INVALID;
       return std::make_shared<iroha::model::ErrorResponse>(response);
     }
@@ -195,7 +196,7 @@ iroha::model::QueryProcessingFactory::execute(
             query);
     if (!validate(*qry)) {
       iroha::model::ErrorResponse response;
-      response.query_hash = qry->query_hash;
+      response.query_hash = iroha::hash(*qry);
       response.reason = model::ErrorResponse::STATEFUL_INVALID;
       return std::make_shared<iroha::model::ErrorResponse>(response);
     }
@@ -206,14 +207,14 @@ iroha::model::QueryProcessingFactory::execute(
         const iroha::model::GetAccountAssetTransactions>(query);
     if (!validate(*qry)) {
       iroha::model::ErrorResponse response;
-      response.query_hash = qry->query_hash;
+      response.query_hash = iroha::hash(*qry);
       response.reason = model::ErrorResponse::STATEFUL_INVALID;
       return std::make_shared<iroha::model::ErrorResponse>(response);
     }
     return executeGetAccountAssetTransactions(*qry);
   }
   iroha::model::ErrorResponse response;
-  response.query_hash = query->query_hash;
+  response.query_hash = iroha::hash(*query);
   response.reason = model::ErrorResponse::NOT_SUPPORTED;
   return std::make_shared<iroha::model::ErrorResponse>(response);
 }
