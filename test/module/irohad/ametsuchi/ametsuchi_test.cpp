@@ -76,7 +76,7 @@ TEST_F(AmetsuchiTest, SampleTest) {
   block.transactions.push_back(txn);
   block.height = 1;
   block.prev_hash.fill(0);
-  auto block1hash = iroha::sha3_256(block);
+  auto block1hash = iroha::hash(block);
   block.hash = block1hash;
   block.txs_number = block.transactions.size();
 
@@ -131,7 +131,7 @@ TEST_F(AmetsuchiTest, SampleTest) {
   block.transactions.push_back(txn);
   block.height = 2;
   block.prev_hash = block1hash;
-  auto block2hash = iroha::sha3_256(block);
+  auto block2hash = iroha::hash(block);
   block.hash = block2hash;
   block.txs_number = block.transactions.size();
 
@@ -264,7 +264,7 @@ TEST_F(AmetsuchiTest, queryGetAccountAssetTransactionsTest) {
   block.transactions.push_back(txn);
   block.height = 1;
   block.prev_hash.fill(0);
-  auto block1hash = iroha::sha3_256(block);
+  auto block1hash = iroha::hash(block);
   block.hash = block1hash;
   block.txs_number = static_cast<uint16_t>(block.transactions.size());
 
@@ -316,7 +316,7 @@ TEST_F(AmetsuchiTest, queryGetAccountAssetTransactionsTest) {
   block.transactions.push_back(txn);
   block.height = 2;
   block.prev_hash = block1hash;
-  auto block2hash = iroha::sha3_256(block);
+  auto block2hash = iroha::hash(block);
   block.hash = block2hash;
   block.txs_number = static_cast<uint16_t>(block.transactions.size());
 
@@ -361,7 +361,7 @@ TEST_F(AmetsuchiTest, queryGetAccountAssetTransactionsTest) {
   block.transactions.push_back(txn);
   block.height = 3;
   block.prev_hash = block2hash;
-  auto block3hash = iroha::sha3_256(block);
+  auto block3hash = iroha::hash(block);
   block.hash = block3hash;
   block.txs_number = static_cast<uint16_t>(block.transactions.size());
 

@@ -65,7 +65,7 @@ namespace iroha {
             | des.Uint64(&Query::query_counter, "query_counter")
             | des.Object(&Query::signature, "signature")
             | [this](auto query) {
-                query->query_hash = sha3_256(*query);
+                query->query_hash = hash(*query);
                 return nonstd::make_optional(query);
               };
       }
