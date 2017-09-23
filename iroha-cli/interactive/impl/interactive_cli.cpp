@@ -29,10 +29,12 @@ namespace iroha_cli {
                     &InteractiveCli::startQuery);
     }
 
-    InteractiveCli::InteractiveCli(std::string account_name, uint64_t tx_counter, uint64_t qry_counter)
+    InteractiveCli::InteractiveCli(std::string account_name,
+                                   nonstd::optional<iroha::keypair_t> pair,
+                                   uint64_t tx_counter, uint64_t qry_counter)
         : creator_(account_name),
-          tx_cli_(creator_, tx_counter),
-          query_cli_(creator_, qry_counter) {
+          tx_cli_(creator_, pair, tx_counter),
+          query_cli_(creator_, pair, qry_counter) {
       assign_main_handlers();
     }
 

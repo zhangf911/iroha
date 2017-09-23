@@ -19,6 +19,7 @@
 #include <responses.pb.h>
 #include <fstream>
 #include <iostream>
+#include "common/types.hpp"
 #include "model/converters/json_query_factory.hpp"
 #include "common/assert_config.hpp"
 #include "model/converters/json_block_factory.hpp"
@@ -63,6 +64,7 @@ DEFINE_string(peers_address, "", "File with peers address");
 
 // Interactive
 DEFINE_bool(interactive, false, "Interactive cli");
+DEFINE_string(keyfile_prefix, "", "Prefixes of files that contains keys");
 
 using namespace iroha::protocol;
 using namespace iroha::model::generators;
@@ -143,8 +145,17 @@ int main(int argc, char* argv[]) {
       logger->error("Specify account name");
       return -1;
     }
+
+    nonstd::optional<iroha::keypair_t> pair;
+    if (FLAGS_keyfile_prefix.empty()) {
+      logger->warn("keyfile_prefix isn't specified so transactions and queries won't be signed");
+      // exit maybe?
+    } else {
+      iroha_cli::KeysManagerImpl manager(FLAGS_keyfile_prefix);
+      pair = manager.loadKeys();
+    }
     // TODO: Init counters from Iroha, or read from disk ?
-    InteractiveCli interactiveCli(FLAGS_name, 0, 0);
+    InteractiveCli interactiveCli(FLAGS_name, pair, 0, 0);
     interactiveCli.run();
   } else {
     assert_config::assert_fatal(false, "Invalid flags");

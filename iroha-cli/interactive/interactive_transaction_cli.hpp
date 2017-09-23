@@ -32,6 +32,7 @@ namespace iroha_cli {
        * @param tx_counter - local counter for transaction
        */
       InteractiveTransactionCli(std::string creator_account,
+                                nonstd::optional<iroha::keypair_t>,
                                 uint64_t tx_counter);
       /**
        * Run interactive query command line
@@ -140,6 +141,9 @@ namespace iroha_cli {
 
       //  Creator account id
       std::string creator_;
+
+      // Possible keypair for signing
+      nonstd::optional<iroha::keypair_t> pair_;
 
       //  Transaction counter specific for account creator
       uint64_t tx_counter_;

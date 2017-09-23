@@ -19,7 +19,12 @@
 #define IROHA_COMMON_HPP
 
 #include <memory>
-#include <nonstd/optional.hpp>
+#include "common/types.hpp"
+#include "crypto/crypto.hpp"
+#include "crypto/hash.hpp"
+#include "model/signature.hpp"
+#include "model/transaction.hpp"
+#include "model/block.hpp"
 
 namespace iroha {
   namespace model {
@@ -30,6 +35,33 @@ namespace iroha {
     template <typename T, typename... Args>
     optional_ptr<T> make_optional_ptr(Args &&... args) {
       return std::make_shared<T>(std::forward<Args>(args)...);
+    }
+
+    template<typename T>
+    void sign(T& t, nonstd::optional<iroha::keypair_t> p) {
+      if (!p.has_value()) return;
+  
+      const auto &pair = p.value();
+      auto hash_ = hash(t);
+      auto sign = iroha::sign(hash_.data(), hash_.size(), pair.pubkey, pair.privkey);
+  
+      model::Signature signature{};
+      signature.signature = sign;
+      signature.pubkey = pair.pubkey;
+  
+      add_signature(t, signature);
+    }
+  
+    inline void add_signature(model::Transaction &tx, model::Signature &s) {
+      tx.signatures.push_back(s);
+    }
+  
+    inline void add_signature(model::Query &query, model::Signature &s) {
+      query.signature.signature = s.signature;
+    }
+  
+    inline void add_signature(model::Block &block, model::Signature &s) {
+      block.sigs.push_back(s);
     }
   }  // namespace model
 }  // namespace iroha

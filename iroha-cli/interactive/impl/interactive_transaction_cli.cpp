@@ -19,6 +19,7 @@
 #include <fstream>
 #include "client.hpp"
 #include "grpc_response_handler.hpp"
+#include "model/common.hpp"
 #include "model/converters/json_common.hpp"
 #include "model/converters/json_transaction_factory.hpp"
 #include "model/generators/transaction_generator.hpp"
@@ -120,8 +121,10 @@ namespace iroha_cli {
     }
 
     InteractiveTransactionCli::InteractiveTransactionCli(
-        std::string creator_account, uint64_t tx_counter) {
+        std::string creator_account, nonstd::optional<iroha::keypair_t> pair,
+        uint64_t tx_counter) {
       creator_ = creator_account;
+      pair_ = pair;
       tx_counter_ = tx_counter;
       createCommandMenu();
       createResultMenu();
@@ -317,7 +320,9 @@ namespace iroha_cli {
           std::chrono::system_clock::now().time_since_epoch() / 1ms;
       auto tx = tx_generator_.generateTransaction(time_stamp, creator_,
                                                   tx_counter_, commands_);
-      // TODO: sign tx
+      
+      iroha::model::sign(tx, pair_);
+
       CliClient client(address.value().first, address.value().second);
       GrpcResponseHandler response_handler;
       response_handler.handle(client.sendTx(tx));
@@ -340,7 +345,8 @@ namespace iroha_cli {
           std::chrono::system_clock::now().time_since_epoch() / 1ms;
       auto tx = tx_generator_.generateTransaction(time_stamp, creator_,
                                                   tx_counter_, commands_);
-      // TODO: sign tx
+      
+      iroha::model::sign(tx, pair_);
 
       iroha::model::converters::JsonTransactionFactory json_factory;
       auto json_doc = json_factory.serialize(tx);

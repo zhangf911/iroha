@@ -19,6 +19,7 @@
 #include <fstream>
 #include "client.hpp"
 #include "grpc_response_handler.hpp"
+#include "model/common.hpp"
 #include "model/converters/json_query_factory.hpp"
 #include "parser/parser.hpp"
 
@@ -64,9 +65,11 @@ namespace iroha_cli {
       addBackOption(result_points_);
     }
 
-    InteractiveQueryCli::InteractiveQueryCli(std::string account_name,
-                                             uint64_t query_counter) {
+    InteractiveQueryCli::InteractiveQueryCli(
+        std::string account_name, nonstd::optional<iroha::keypair_t> pair,
+        uint64_t query_counter) {
       creator_ = account_name;
+      pair_ = pair;
       counter_ = query_counter;
       create_queries_menu();
       create_result_menu();
@@ -169,6 +172,9 @@ namespace iroha_cli {
       if (not address.has_value()) {
         return true;
       }
+
+      iroha::model::sign(*query_, pair_);
+
       CliClient client(address.value().first, address.value().second);
       GrpcResponseHandler{}.handle(client.sendQuery(query_));
       printEnd();
@@ -179,6 +185,7 @@ namespace iroha_cli {
     bool InteractiveQueryCli::parseSaveFile(QueryParams params) {
       auto path = params[0];
       iroha::model::converters::JsonQueryFactory json_factory;
+      iroha::model::sign(*query_, pair_); // maybe not a good solution
       auto json_string = json_factory.serialize(query_);
       std::ofstream output_file(path);
       if (not output_file) {

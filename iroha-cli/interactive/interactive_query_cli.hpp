@@ -31,11 +31,13 @@ namespace iroha_cli {
        * @param account_id creator's account identification
        * @param query_counter counter associated with creator's account
        */
-      InteractiveQueryCli(std::string account_id, uint64_t query_counter);
-      /**
-       * Run interactive query command line
-       */
-      void run();
+       InteractiveQueryCli(std::string account_id,
+                           nonstd::optional<iroha::keypair_t>,
+                           uint64_t query_counter);
+       /**
+        * Run interactive query command line
+        */
+       void run();
 
      private:
 
@@ -114,6 +116,9 @@ namespace iroha_cli {
       // ------- Query data -----------
       // Creator account id
       std::string creator_;
+
+      // Possible keypair for signing
+      nonstd::optional<iroha::keypair_t> pair_;
 
       // Local query counter of account creator_
       uint64_t counter_;
