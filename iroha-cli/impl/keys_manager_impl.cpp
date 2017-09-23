@@ -56,6 +56,9 @@ namespace iroha_cli {
     priv_file >> client_priv_key_;
     pub_file >> client_pub_key_;
 
+    priv_file.close();
+    pub_file.close();
+
     return nonstd::make_optional<iroha::keypair_t>()
         | deserializeKeypairField(&iroha::keypair_t::pubkey,
                                   client_pub_key_)
@@ -66,23 +69,15 @@ namespace iroha_cli {
   bool KeysManagerImpl::createKeys(std::string pass_phrase) {
     auto seed = iroha::create_seed(pass_phrase);
     auto key_pairs = iroha::create_keypair(seed);
-    std::ifstream pb_file(account_name_ + ".pub");
-    std::ifstream pr_file(account_name_ + ".priv");
+    std::fstream pb_file(account_name_ + ".pub");
+    std::fstream pr_file(account_name_ + ".priv");
     if (pb_file && pr_file) {
       return false;
     }
-    // Save pubkey to file
-    std::ofstream pub_file(account_name_ + ".pub");
-    if (not pub_file) {
-      return false;
-    }
-    pub_file << key_pairs.pubkey.to_hexstring();
-    // Save privkey to file
-    std::ofstream priv_file(account_name_ + ".priv");
-    if (not priv_file) {
-      return false;
-    }
-    priv_file << key_pairs.privkey.to_hexstring();
+    pb_file << key_pairs.pubkey.to_hexstring();
+    pr_file << key_pairs.privkey.to_hexstring();
+    pb_file.close();
+    pr_file.close();
     return true;
   }
 
