@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.3)
 
 find_program(CCACHE_PROGRAM ccache)
 if(CCACHE_PROGRAM)
@@ -51,6 +51,7 @@ include_directories(
 
 include(cmake/dependencies.cmake)
 include(cmake/functions.cmake)
+add_subdirectory(libiroha)
 add_subdirectory(schema)
 add_subdirectory(libs)
 add_subdirectory(irohad)
