@@ -14,7 +14,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include <memory>
+
 #include "model/generators/query_generator.hpp"
+#include "crypto/hash.hpp"
 
 namespace iroha {
   namespace model {
@@ -41,8 +44,6 @@ namespace iroha {
         query->creator_account_id = creator;
         query->account_id = account_id;
         query->query_counter = query_counter;
-        query->query_hash =
-            hash_provider_.get_hash(query);
         return query;
       }
 
@@ -55,8 +56,6 @@ namespace iroha {
         query->query_counter = query_counter;
         query->account_id = account_id;
         query->asset_id = asset_id;
-        query->query_hash =
-            hash_provider_.get_hash(query);
         return query;
       }
 
@@ -68,8 +67,6 @@ namespace iroha {
         query->creator_account_id = creator;
         query->query_counter = query_counter;
         query->account_id = account_id;
-        query->query_hash =
-            hash_provider_.get_hash(query);
         return query;
       }
 
@@ -81,7 +78,6 @@ namespace iroha {
         query->creator_account_id = creator;
         query->query_counter = query_counter;
         query->account_id = account_id;
-        query->query_hash = hash_provider_.get_hash(query);
         return query;
       }
 
@@ -94,7 +90,6 @@ namespace iroha {
         query->query_counter = query_counter;
         query->account_id = account_id;
         query->asset_id = asset_id;
-        query->query_hash = hash_provider_.get_hash(query);
         return query;
       }
 
