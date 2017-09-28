@@ -141,6 +141,7 @@ int main(int argc, char *argv[]) {
     std::ofstream output_file("genesis.block");
     output_file << jsonToString(doc);
     logger->info("File saved to genesis.block");
+
   } else if (FLAGS_interactive) {
     if (FLAGS_name.empty()) {
       logger->error("Specify account name");

@@ -136,6 +136,7 @@ namespace iroha_cli {
       addBackOption(commands_menu_);
     }
 
+
     void InteractiveTransactionCli::createResultMenu() {
       // --- Add result menu points ---
 
@@ -164,6 +165,7 @@ namespace iroha_cli {
           result_handlers_, result_params_descriptions, result_desciption);
     }
 
+
     InteractiveTransactionCli::InteractiveTransactionCli(
         const std::string &creator_account,
         uint64_t tx_counter,
@@ -176,6 +178,7 @@ namespace iroha_cli {
       createCommandMenu();
       createResultMenu();
     }
+
 
     void InteractiveTransactionCli::run() {
       std::string line;
@@ -202,6 +205,7 @@ namespace iroha_cli {
       }
     }
 
+
     bool InteractiveTransactionCli::parseCommand(std::string line) {
       if (isBackOption(line)) {
         // Switch current context
@@ -221,6 +225,7 @@ namespace iroha_cli {
       printMenu("Command is formed. Choose what to do:", result_menu_);
       return true;
     }
+
 
     std::shared_ptr<iroha::model::Command>
     InteractiveTransactionCli::parseCreateRole(
@@ -278,6 +283,7 @@ namespace iroha_cli {
       return std::make_shared<CreateRole>(role, perms);
     }
 
+
     std::shared_ptr<iroha::model::Command>
     InteractiveTransactionCli::parseAppendRole(
         std::vector<std::string> params) {
@@ -285,6 +291,7 @@ namespace iroha_cli {
       auto role = params[1];
       return std::make_shared<AppendRole>(acc_id, role);
     }
+
 
     std::shared_ptr<iroha::model::Command>
     InteractiveTransactionCli::parseGrantPermission(
@@ -294,6 +301,7 @@ namespace iroha_cli {
       return std::make_shared<GrantPermission>(acc_id, permission);
     }
 
+
     std::shared_ptr<iroha::model::Command>
     InteractiveTransactionCli::parseRevokePermission(
         std::vector<std::string> params) {
@@ -301,6 +309,7 @@ namespace iroha_cli {
       auto permission = params[1];
       return std::make_shared<RevokePermission>(acc_id, permission);
     }
+
 
     std::shared_ptr<iroha::model::Command>
     InteractiveTransactionCli::parseAddAssetQuantity(
@@ -323,6 +332,7 @@ namespace iroha_cli {
       return generator_.generateAddAssetQuantity(account_id, asset_id, amount);
     }
 
+
     std::shared_ptr<iroha::model::Command>
     InteractiveTransactionCli::parseAddPeer(std::vector<std::string> params) {
       auto address = params[0];
@@ -331,6 +341,7 @@ namespace iroha_cli {
       pubkey = iroha::hexstringToArray<iroha::pubkey_t::size()>(key).value();
       return generator_.generateAddPeer(address, pubkey);
     }
+
 
     std::shared_ptr<iroha::model::Command>
     InteractiveTransactionCli::parseAddSignatory(
@@ -341,6 +352,7 @@ namespace iroha_cli {
       pubkey = iroha::hexstringToArray<iroha::pubkey_t::size()>(key).value();
       return generator_.generateAddSignatory(account_id, pubkey);
     }
+
 
     std::shared_ptr<iroha::model::Command>
     InteractiveTransactionCli::parseCreateAccount(
@@ -353,6 +365,7 @@ namespace iroha_cli {
       return generator_.generateCreateAccount(account_id, domain_id, pubkey);
     }
 
+
     std::shared_ptr<iroha::model::Command>
     InteractiveTransactionCli::parseCreateDomain(
         std::vector<std::string> params) {
@@ -360,6 +373,7 @@ namespace iroha_cli {
       auto user_default_role = params[1];
       return generator_.generateCreateDomain(domain_id, user_default_role);
     }
+
 
     std::shared_ptr<iroha::model::Command>
     InteractiveTransactionCli::parseCreateAsset(
@@ -373,6 +387,7 @@ namespace iroha_cli {
       }
       return generator_.generateCreateAsset(asset_name, domain_id, val.value());
     }
+
 
     std::shared_ptr<iroha::model::Command>
     InteractiveTransactionCli::parseRemoveSignatory(
@@ -395,6 +410,7 @@ namespace iroha_cli {
       return generator_.generateSetQuorum(account_id, quorum.value());
     }
 
+
     std::shared_ptr<iroha::model::Command>
     InteractiveTransactionCli::parseSubtractAssetQuantity(
         std::vector<std::string> params) {
@@ -402,6 +418,7 @@ namespace iroha_cli {
       std::cout << "Not implemented" << std::endl;
       return nullptr;
     }
+
 
     std::shared_ptr<iroha::model::Command>
     InteractiveTransactionCli::parseTransferAsset(
@@ -421,6 +438,7 @@ namespace iroha_cli {
           src_account_id, dest_account_id, asset_id, amount);
     }
 
+
     // --------- Result parsers -------------
 
     bool InteractiveTransactionCli::parseResult(std::string line) {
@@ -429,6 +447,7 @@ namespace iroha_cli {
           this, line, result_handlers_, result_params_descriptions);
       return not res.has_value() ? true : res.value();
     }
+
 
     bool InteractiveTransactionCli::parseSendToIroha(
         std::vector<std::string> params) {
@@ -453,6 +472,8 @@ namespace iroha_cli {
       // Stop parsing
       return false;
     }
+
+
 
     bool InteractiveTransactionCli::parseSaveFile(
         std::vector<std::string> params) {
@@ -483,6 +504,7 @@ namespace iroha_cli {
       return false;
     }
 
+
     bool InteractiveTransactionCli::parseGoBack(
         std::vector<std::string> params) {
       current_context_ = MAIN;
@@ -494,6 +516,8 @@ namespace iroha_cli {
       // Continue parsing
       return true;
     }
+
+
 
     bool InteractiveTransactionCli::parseAddCommand(
         std::vector<std::string> params) {

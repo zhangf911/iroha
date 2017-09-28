@@ -43,6 +43,3 @@ target_link_libraries(keys_manager
     optional
     crypto
     )
-
-
-add_subdirectory(keys)
