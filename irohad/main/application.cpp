@@ -135,18 +135,20 @@ void Irohad::initPeer() {
 }
 
 void Irohad::initCryptoProvider() {
-  auto mock_crypto_verifier = std::make_shared<MockCryptoProvider>(peer.pubkey);
+//  auto mock_crypto_verifier = std::make_shared<MockCryptoProvider>(peer.pubkey);
+//
+//  EXPECT_CALL(*mock_crypto_verifier,
+//              verify(::testing::A<const Transaction &>()))
+//      .WillRepeatedly(::testing::Return(true));
+//  EXPECT_CALL(*mock_crypto_verifier,
+//              verify(::testing::A<std::shared_ptr<const Query>>()))
+//      .WillRepeatedly(::testing::Return(true));
+//  EXPECT_CALL(*mock_crypto_verifier, verify(::testing::A<const Block &>()))
+//      .WillRepeatedly(::testing::Return(true));
+//
+//  crypto_verifier = mock_crypto_verifier;
 
-  EXPECT_CALL(*mock_crypto_verifier,
-              verify(::testing::A<const Transaction &>()))
-      .WillRepeatedly(::testing::Return(true));
-  EXPECT_CALL(*mock_crypto_verifier,
-              verify(::testing::A<std::shared_ptr<const Query>>()))
-      .WillRepeatedly(::testing::Return(true));
-  EXPECT_CALL(*mock_crypto_verifier, verify(::testing::A<const Block &>()))
-      .WillRepeatedly(::testing::Return(true));
-
-  crypto_verifier = mock_crypto_verifier;
+  crypto_verifier = std::make_shared<ModelCryptoProviderImpl>(this->keypair);
 
   log_->info("[Init] => crypto provider");
 }
@@ -275,4 +277,8 @@ void Irohad::run() {
   log_->info("===> iroha initialized");
   torii_server->waitForServersReady();
   loop->run();
+}
+
+void Irohad::setKeypair(iroha::keypair_t kp) {
+  this->keypair = kp;
 }

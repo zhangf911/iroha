@@ -74,6 +74,8 @@ class Irohad {
    */
   virtual void run();
 
+  virtual void setKeypair(iroha::keypair_t kp);
+
   virtual ~Irohad();
 
  protected:
@@ -180,6 +182,8 @@ class Irohad {
   std::thread internal_thread, server_thread;
 
   logger::Logger log_;
+
+  iroha::keypair_t keypair;
 
  public:
   std::shared_ptr<iroha::ametsuchi::Storage> storage;
