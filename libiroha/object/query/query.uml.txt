@@ -24,8 +24,7 @@ class StringSerializableFace {
 
 ' derived classes can be validated and constructed'
 class PrimitiveFace <Type, T...> {
-  - PrimitiveFace()
-  + {abstract}{static} Type from(T...) = 0;
+  + {abstract} {static} Result<Type, Type::Error> from(T...) = 0;
   + {abstract} {static} bool is_valid(T...) = 0;
 }
 
@@ -45,41 +44,41 @@ Asset ---|> PrimitiveFace
 AccountId ---|> PrimitiveFace
 
 class Domain {
-  + {static} Domain from(std::string);
+  + {static} Result<Domain, Domain::Error> from(std::string);
   + {static} bool is_valid(std::string);
   + std::string to_string();
 }
 
 class Signature {
-  + {static} Signature from(std::string pub, std::string sig);
+  + {static} Result<Signature, Signature::Error> from(std::string pub, std::string sig);
   + {static} bool is_valid(std::string pub, std::string sig)
   + pubkey_t pubkey();
   + sig_t signature();
 }
 
 class Account {
-  + {static} Account from(std::string);
+  + {static} Result<Account, Account::Error> from(std::string);
   + {static} bool is_valid(std::string);
   + std::string to_string();
 }
 
 class Asset {
-  + {static} Asset from(std::string);
+  + {static} Result<Asset, Asset::Error> from(std::string);
   + {static} bool is_valid(std::stirng);
   + std::string to_string();
 }
 
 class AccountId {
   + {static} AccountId from(Account, Domain);
-  + {static} AccountId from(std::string, std::string);
+  + {static} Result<AccountId, AccountId::Error> from(std::string, std::string);
   + Account account();
   + Domain domain();
   + std::string to_string();
 }
 
 class AssetId {
-  + {static} AssetId from(Asset, Domain);
-  + {static} AssetId from(std::string, std::string);
+  + {static} Assetid from(Asset, Domain);
+  + {static} Result<AssetId, AssetId::Error> from(std::string, std::string);
   + Asset asset();
   + Domain domain();
   std::string to_string();
