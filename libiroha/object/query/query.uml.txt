@@ -1,0 +1,142 @@
+@startuml
+skinparam classAttributeIconSize 0
+
+' dependencies
+AccountId ---> Domain
+AccountId ---> Account
+AssetId ---> Asset
+AssetId ---> Domain
+Query ---> AccountId
+Query ---> Signature
+GetAccount ---> AccountId
+GetSignatories ---> AccountId
+GetAccountTransactions ---> AccountId
+GetAccountAssetTransactions ---> AccountId
+GetAccountAssetTransactions ---> AssetId
+GetAccountAssets ---> AccountId
+GetAccountAssets ---> AssetId
+GetAssetInfo ---> AssetId
+
+' derived classes can be converted to string
+class StringSerializableFace {
+  + {abstract} std::string to_string() = 0;
+}
+
+' derived classes can be validated and constructed'
+class PrimitiveFace <Type, T...> {
+  - PrimitiveFace()
+  + {abstract}{static} Type from(T...) = 0;
+  + {abstract} {static} bool is_valid(T...) = 0;
+}
+
+' inheritance
+Domain ---|> StringSerializableFace
+Asset ---|> StringSerializableFace
+Account ---|> StringSerializableFace
+AccountId ---|> StringSerializableFace
+AssetId ---|> StringSerializableFace
+Domain  ---|> StringSerializableFace
+
+' inheritance
+Signature ---|> PrimitiveFace
+Domain ---|> PrimitiveFace
+Account ---|> PrimitiveFace
+Asset ---|> PrimitiveFace
+AccountId ---|> PrimitiveFace
+
+class Domain {
+  + {static} Domain from(std::string);
+  + {static} bool is_valid(std::string);
+  + std::string to_string();
+}
+
+class Signature {
+  + {static} Signature from(std::string pub, std::string sig);
+  + {static} bool is_valid(std::string pub, std::string sig)
+  + pubkey_t pubkey();
+  + sig_t signature();
+}
+
+class Account {
+  + {static} Account from(std::string);
+  + {static} bool is_valid(std::string);
+  + std::string to_string();
+}
+
+class Asset {
+  + {static} Asset from(std::string);
+  + {static} bool is_valid(std::stirng);
+  + std::string to_string();
+}
+
+class AccountId {
+  + {static} AccountId from(Account, Domain);
+  + {static} AccountId from(std::string, std::string);
+  + Account account();
+  + Domain domain();
+  + std::string to_string();
+}
+
+class AssetId {
+  + {static} AssetId from(Asset, Domain);
+  + {static} AssetId from(std::string, std::string);
+  + Asset asset();
+  + Domain domain();
+  std::string to_string();
+}
+
+' inheritance
+GetAccount ---|> Query
+GetSignatories ---|> Query
+GetAccountTransactions ---|> Query
+GetAccountAssetTransactions ---|> Query
+GetAccountAssets ---|> Query
+GetAssetInfo ---|> Query
+GetRolePermissions ---|> Query
+
+class Query {
+  + Signature signature;
+  + AccountId creator();
+  + ts64_t timestamp();
+  + hash256_t hash();
+  + uint64_t counter();
+}
+
+class GetAccount {
+  + GetAccount(std::string account_id);
+  + AccountId accound_id();
+}
+
+class GetSignatories {
+  + GetSignatories (std::string account_id);
+  + AccountId account_id();
+}
+
+class GetAccountTransactions {
+  + GetAccountTransactions (std::string account_id);
+  + AccountId account_id();
+}
+
+class GetAccountAssetTransactions {
+  + GetAccountAssetTransactions (std::string account_id, std::string asset_id);
+  + AccountId account_id();
+  + AssetId asset_id();
+}
+
+class GetAccountAssets {
+  + GetAccountAssets (std::string account_id, std::string asset_id);
+  + AccountId account_id();
+  + AssetId asset_id();
+}
+
+class GetAssetInfo {
+  + GetAssetInfo(std::string asset_id);
+  + AssetId asset_id();
+}
+
+class GetRolePermissions {
+  + GetRolePermissions(std::string role_perm);
+  + std::string role_id();
+}
+
+@enduml
