@@ -187,7 +187,8 @@ namespace iroha {
       return std::equal(commands.begin(), commands.end(), rhs.commands.begin(),
                         rhs.commands.end(),
                         [](const auto &i, const auto &j) { return *i == *j; })
-          && rhs.tx_counter == tx_counter && rhs.signatures == signatures
+          && rhs.tx_counter == tx_counter
+          && rhs.quorum == quorum
           && rhs.created_ts == created_ts;
     }
 
