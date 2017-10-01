@@ -98,10 +98,14 @@ TEST_F(TxPipelineIntegrationTest, TxPipelineTest) {
   // insert genesis block
   iroha::main::BlockInserter inserter(irohad->storage);
 
+  auto keypair = iroha::create_keypair();
+
   auto genesis_block =
       iroha::model::generators::BlockGenerator().generateGenesisBlock(
-          {"0.0.0.0:10000"});
+          {"0.0.0.0:10000"}, {keypair.pubkey});
   inserter.applyToLedger({genesis_block});
+
+  irohad->setKeypair(keypair);
 
   // initialize irohad
   irohad->init();
@@ -118,7 +122,7 @@ TEST_F(TxPipelineIntegrationTest, TxPipelineTest) {
   auto tx =
       iroha::model::generators::TransactionGenerator().generateTransaction(
           ts, "admin@test", 1, {cmd});
-  tx.signatures.emplace_back();
+  tx = irohad->getCryptoProvider()->sign(tx);
 
   // generate expected proposal
   iroha::model::Proposal proposal({tx});

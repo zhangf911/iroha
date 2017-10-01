@@ -32,6 +32,19 @@ namespace iroha {
          * Iroha network
          * @param timestamp
          * @param peers_address
+         * @param public_keys
+         * @return
+         */
+        Transaction generateGenesisTransaction(
+            ts64_t timestamp,
+            std::vector<std::string> peers_address,
+            std::vector<pubkey_t> public_keys);
+
+        /**
+         * Generate genesis transaction, contain all necessary commands for new
+         * Iroha network
+         * @param timestamp
+         * @param peers_address
          * @return
          */
         Transaction generateGenesisTransaction(
@@ -45,7 +58,8 @@ namespace iroha {
          * @return
          */
         Transaction generateTransaction(
-            ts64_t timestamp, std::string creator_account_id,
+            ts64_t timestamp,
+            std::string creator_account_id,
             uint64_t tx_counter,
             std::vector<std::shared_ptr<Command>> commands);
       };
