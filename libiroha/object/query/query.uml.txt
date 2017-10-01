@@ -37,6 +37,7 @@ package libiroha.object.common {
   Address ---|> ObjectFace
   Amount ---|> ObjectFace
   Identity ---|> ObjectFace
+  AssetId ---|> ObjectFace
 }
 
 package libiroha.object.query {
@@ -59,6 +60,7 @@ package libiroha.object.query {
   Query ---|> Message
 }
 
+/'
 package libiroha.object.transaction {
   class Transaction
   class AddAssetQuantity
@@ -92,6 +94,7 @@ package libiroha.object.transaction {
   GrantPermission ---|> Transaction
   RevokePermission ---|> Transaction
 }
+'/
 
 
 ' derived classes can be converted to string
@@ -101,53 +104,47 @@ abstract class StringSerializableFace {
 
 ' derived classes can be validated and constructed'
 abstract class ObjectFace <Type, T...> {
-  + {abstract} {static} Result<Type, Type::Error> from(T...) = 0;
-  + {abstract} {static} bool is_valid(T...) = 0;
+  + {abstract} {static} Result<Type, Type::Error> create(T...) = 0;
 }
 
 class Domain {
-  + {static} Result<Domain, Domain::Error> from(std::string);
-  + {static} bool is_valid(std::string);
+  + {static} Result<Domain, Domain::Error> create(std::string);
   + std::string to_string();
 }
 
 class Address {
-  + {static} Result<Address, Address::Error> from(std::string ip, short port);
-  + {static} bool is_valid(std::string ip, uint16_t port);
+  + {static} Result<Address, Address::Error> create(std::string ip, short port);
   + std::string ip();
   + uint16_t port();
 }
 
 class Signature {
-  + {static} Result<Signature, Signature::Error> from(std::string pub, std::string sig);
-  + {static} bool is_valid(std::string pub, std::string sig)
+  + {static} Result<Signature, Signature::Error> create(std::string pub, std::string sig);
   + pubkey_t pubkey();
   + sig_t signature();
 }
 
 class Username {
-  + {static} Result<Username, Username::Error> from(std::string);
-  + {static} bool is_valid(std::string);
+  + {static} Result<Username, Username::Error> create(std::string);
   + std::string to_string();
 }
 
 class Asset {
-  + {static} Result<Asset, Asset::Error> from(std::string);
-  + {static} bool is_valid(std::stirng);
+  + {static} Result<Asset, Asset::Error> create(std::string);
   + std::string to_string();
 }
 
 class AccountId {
-  + {static} AccountId from(Account, Domain);
-  + {static} Result<AccountId, AccountId::Error> from(std::string, std::string);
+  + {static} AccountId create(Account, Domain);
+  + {static} Result<AccountId, AccountId::Error> create(std::string, std::string);
   + Username username();
   + Domain domain();
   + std::string to_string();
 }
 
 class AssetId {
-  + {static} Assetid from(Asset, Domain);
-  + {static} Result<AssetId, AssetId::Error> from(std::string, std::string);
+  + {static} Assetid create(Asset, Domain);
+  + {static} Result<AssetId, AssetId::Error> create(std::string, std::string);
   + Asset asset();
   + Domain domain();
   std::string to_string();
@@ -157,7 +154,6 @@ class Message {
   + AccountId creator();
   + ts64_t timestamp();
   + hash256_t hash();
-  + uint64_t counter();
 }
 
 
@@ -206,9 +202,11 @@ class GetRolePermissions {
 
 
 
+/'
 '''''' TRANSACTION
 class Transaction {
   + std::vector<Signature> signatures();
+  + uint64_t counter();
 }
 
 class AddAssetQuantity {
@@ -235,6 +233,6 @@ class CreateAsset {
   + AssetId asset();
   + uint8_t precision();
 }
-
+'/
 
 @enduml
