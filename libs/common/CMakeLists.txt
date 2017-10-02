@@ -14,3 +14,12 @@ target_link_libraries(common INTERFACE
     optional
     ${Boost_LIBRARIES}
     )
+
+
+add_library(common-result
+    result.cpp
+    result.hpp
+    )
+target_link_libraries(common-result
+    ${Boost_LIBRARIES}
+    )

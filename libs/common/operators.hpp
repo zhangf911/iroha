@@ -15,7 +15,8 @@
  * limitations under the License.
  */
 
-#pragma once
+#ifndef IROHA_LIBS_COMMON_OPERATORS_HPP_
+#define IROHA_LIBS_COMMON_OPERATORS_HPP_
 
 namespace iroha {
 
@@ -43,3 +44,5 @@ namespace iroha {
     return {};
   }
 }
+
+#endif  // IROHA_LIBS_COMMON_OPERATORS_HPP_
