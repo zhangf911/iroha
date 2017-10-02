@@ -42,7 +42,7 @@ namespace iroha {
               command_generator.generateAddPeer(peers_address[i], peer_key));
         }
         // Add domain
-        tx.commands.push_back(command_generator.generateCreateDomain("test"));
+        tx.commands.push_back(command_generator.generateCreateDomain("test", "user"));
         // Create accounts
         auto acc_key = generator::random_blob<pubkey_t::size()>(1);
         tx.commands.push_back(
