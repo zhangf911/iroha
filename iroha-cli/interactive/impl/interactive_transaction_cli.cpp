@@ -28,7 +28,7 @@
 #include "model/commands/create_role.hpp"
 #include "model/commands/grant_permission.hpp"
 #include "model/commands/revoke_permission.hpp"
-#include "parser/parser.hpp"
+
 #include "model/permissions.hpp"
 
 using namespace std::chrono_literals;

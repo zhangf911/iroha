@@ -70,15 +70,35 @@ namespace iroha {
 
       std::shared_ptr<Command> CommandGenerator::generateCreateAdminRole(std::string role_name) {
         std::set<std::string> perms = {
-            can_create_domain,  can_add_signatory,  can_remove_signatory,
-            can_set_quorum,     can_get_my_account, can_get_my_signatories,
-            can_get_my_acc_ast, can_get_my_acc_txs, can_create_asset, can_add_asset_qty};
+            can_create_domain, can_create_account, can_add_peer};
+        perms.insert(edit_self_group.begin(), edit_self_group.end());
+        perms.insert(read_all_group.begin(), read_all_group.end());
         return std::make_shared<CreateRole>(role_name, perms);
       }
 
+      std::shared_ptr<Command> CommandGenerator::generateCreateUserRole(std::string role_name) {
+        std::set<std::string> perms = {
+            can_receive, can_transfer
+        };
+        // User can read their account
+        perms.insert(read_self_group.begin(), read_self_group.end());
+        // User can grant permissions to others
+        perms.insert(grant_group.begin(), grant_group.end());
+        return std::make_shared<CreateRole>(role_name, perms);
+      }
+
+      std::shared_ptr<Command> CommandGenerator::generateCreateAssetCreatorRole(std::string role_name) {
+        std::set<std::string> perms = {
+            can_receive, can_transfer
+        };
+        perms.insert(assset_creator_group.begin(), assset_creator_group.end());
+        perms.insert(read_self_group.begin(), read_self_group.begin());
+        return std::make_shared<CreateRole>(role_name, perms);
+      }
 
       std::shared_ptr<Command> CommandGenerator::generateAddAssetQuantity(
-          const std::string &account_id, const std::string &asset_id, const Amount &amount) {
+          const std::string &account_id, const std::string &asset_id,
+          const Amount &amount) {
         return generateCommand<AddAssetQuantity>(account_id, asset_id, amount);
       }
 
@@ -86,7 +106,6 @@ namespace iroha {
           const std::string &account_id, uint32_t quorum) {
         return generateCommand<SetQuorum>(account_id, quorum);
       }
-
 
       std::shared_ptr<Command> CommandGenerator::generateSubtractAssetQuantity(
           const std::string &account_id, const std::string &asset_id, const Amount &amount) {

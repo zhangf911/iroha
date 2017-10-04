@@ -18,6 +18,7 @@ limitations under the License.
 #define IROHA_PERMISSIONS_HPP
 
 #include <string>
+#include <set>
 
 namespace iroha {
   namespace model {
@@ -52,6 +53,42 @@ namespace iroha {
 
   const std::string can_get_my_acc_ast_txs = "CanGetMyAccountAssetsTransactions";
   const std::string can_get_all_acc_ast_txs = "CanGetAllAccountAssetsTransactions";
+
+  const std::set<std::string> read_self_group = {
+      can_get_my_account,
+      can_get_my_acc_txs,
+      can_get_my_acc_ast,
+      can_get_my_acc_ast_txs,
+      can_get_my_signatories
+  };
+
+
+  const std::set<std::string> read_all_group = {
+      can_get_all_accounts,
+      can_get_all_acc_txs,
+      can_get_all_acc_ast,
+      can_get_all_acc_ast_txs,
+      can_get_all_signatories,
+      can_get_roles,
+      can_read_assets
+  };
+
+  const std::set<std::string> grant_group = {
+      "CanGrant"+can_set_quorum,
+      "CanGrant"+can_add_signatory,
+      "CanGrant"+can_remove_signatory
+  };
+
+  const std::set<std::string> edit_self_group = {
+      can_set_quorum,
+      can_add_signatory,
+      can_remove_signatory
+  };
+
+  const std::set<std::string> assset_creator_group = {
+      can_create_asset,
+      can_add_asset_qty
+  };
 
   } // namespace model
 }  // namespace iroha

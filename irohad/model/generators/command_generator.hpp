@@ -57,6 +57,10 @@ namespace iroha {
 
         std::shared_ptr<Command> generateCreateAdminRole(std::string role_name);
 
+        std::shared_ptr<Command> generateCreateUserRole(std::string role_name);
+
+        std::shared_ptr<Command> generateCreateAssetCreatorRole(std::string role_name);
+
         std::shared_ptr<Command> generateSetQuorum(
             const std::string &account_id, uint32_t quorum);
 

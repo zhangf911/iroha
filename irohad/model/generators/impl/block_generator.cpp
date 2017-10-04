@@ -18,6 +18,7 @@
 #include "crypto/hash.hpp"
 #include "model/generators/block_generator.hpp"
 #include <chrono>
+#include "datetime/time.hpp"
 
 namespace iroha {
   namespace model {
@@ -25,7 +26,7 @@ namespace iroha {
       Block BlockGenerator::generateGenesisBlock(
           std::vector<std::string> peers_address) {
         Block block{};
-        block.created_ts = 0;
+        block.created_ts = time::now();
         block.height = 1;
         std::fill(block.prev_hash.begin(), block.prev_hash.end(), 0);
         std::fill(block.merkle_root.begin(), block.merkle_root.end(), 0);
