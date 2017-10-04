@@ -16,6 +16,7 @@
  */
 
 #include <gtest/gtest.h>
+#include <model/commands/create_role.hpp>
 #include "ametsuchi/impl/storage_impl.hpp"
 #include "common/byteutils.hpp"
 #include "crypto/hash.hpp"
@@ -31,6 +32,7 @@
 #include "model/commands/transfer_asset.hpp"
 #include "model/converters/pb_block_factory.hpp"
 #include "module/irohad/ametsuchi/ametsuchi_fixture.hpp"
+#include "model/permissions.hpp"
 
 using namespace iroha::ametsuchi;
 using namespace iroha::model;
@@ -62,11 +64,16 @@ TEST_F(AmetsuchiTest, SampleTest) {
   ASSERT_TRUE(storage);
   auto wsv = storage->getWsvQuery();
   auto blocks = storage->getBlockQuery();
+  CreateRole createRole;
+  createRole.role_name = "user";
+  createRole.permissions = {can_add_peer, can_create_asset, can_get_my_account};
 
   Transaction txn;
   txn.creator_account_id = "admin1";
+  txn.commands.push_back(std::make_shared<CreateRole>(createRole));
   CreateDomain createDomain;
   createDomain.domain_name = "ru";
+  createDomain.default_role = "user";
   txn.commands.push_back(std::make_shared<CreateDomain>(createDomain));
   CreateAccount createAccount;
   createAccount.account_name = "user1";
@@ -161,7 +168,7 @@ TEST_F(AmetsuchiTest, SampleTest) {
   });
 
   blocks->getAccountTransactions("admin1").subscribe(
-      [](auto tx) { EXPECT_EQ(tx.commands.size(), 2); });
+      [](auto tx) { EXPECT_EQ(tx.commands.size(), 3); });
   blocks->getAccountTransactions("admin2").subscribe(
       [](auto tx) { EXPECT_EQ(tx.commands.size(), 4); });
 
@@ -218,11 +225,18 @@ TEST_F(AmetsuchiTest, queryGetAccountAssetTransactionsTest) {
   const auto asset1id = "asset1#domain";
   const auto asset2id = "asset2#domain";
 
+
+  CreateRole createRole;
+  createRole.role_name = "user";
+  createRole.permissions = {can_add_peer, can_create_asset, can_get_my_account};
+
   // 1st tx
   Transaction txn;
   txn.creator_account_id = admin;
   CreateDomain createDomain;
+  txn.commands.push_back(std::make_shared<CreateRole>(createRole));
   createDomain.domain_name = domain;
+  createDomain.default_role = "user";
   txn.commands.push_back(std::make_shared<CreateDomain>(createDomain));
   CreateAccount createAccount1;
   createAccount1.account_name = user1name;
@@ -398,7 +412,7 @@ TEST_F(AmetsuchiTest, queryGetAccountAssetTransactionsTest) {
   });
 
   blocks->getAccountTransactions(admin).subscribe(
-      [](auto tx) { EXPECT_EQ(tx.commands.size(), 8); });
+      [](auto tx) { EXPECT_EQ(tx.commands.size(), 9); });
   blocks->getAccountTransactions(user1id).subscribe(
       [](auto tx) { EXPECT_EQ(tx.commands.size(), 1); });
   blocks->getAccountTransactions(user2id).subscribe(
@@ -436,10 +450,16 @@ TEST_F(AmetsuchiTest, AddSignatoryTest) {
   auto user2id = "user2@domain";
 
   // 1st tx (create user1 with pubkey1)
+  CreateRole createRole;
+  createRole.role_name = "user";
+  createRole.permissions = {can_add_peer, can_create_asset, can_get_my_account};
+
   Transaction txn;
   txn.creator_account_id = "admin1";
+  txn.commands.push_back(std::make_shared<CreateRole>(createRole));
   CreateDomain createDomain;
   createDomain.domain_name = "domain";
+  createDomain.default_role = "user";
   txn.commands.push_back(std::make_shared<CreateDomain>(createDomain));
   CreateAccount createAccount;
   createAccount.account_name = "user1";
