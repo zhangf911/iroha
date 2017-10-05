@@ -19,8 +19,9 @@
 #include "crypto/keys_manager_impl.hpp"
 #include "datetime/time.hpp"
 #include "framework/test_subscriber.hpp"
-#include "main/application.hpp"
+#include "main/config/config.hpp"
 #include "main/raw_block_insertion.hpp"
+#include "main/service.hpp"
 #include "model/generators/block_generator.hpp"
 #include "module/irohad/ametsuchi/ametsuchi_fixture.hpp"
 
@@ -29,22 +30,9 @@
 using namespace framework::test_subscriber;
 using namespace std::chrono_literals;
 
-class TestIrohad : public Irohad {
+class TestIrohad : public Service {
  public:
-  TestIrohad(const std::string &block_store_dir,
-             const std::string &redis_host,
-             size_t redis_port,
-             const std::string &pg_conn,
-             size_t torii_port,
-             size_t internal_port,
-             const iroha::keypair_t &keypair)
-      : Irohad(block_store_dir,
-               redis_host,
-               redis_port,
-               pg_conn,
-               torii_port,
-               internal_port,
-               keypair) {}
+  TestIrohad(std::unique_ptr<Config> config) : Service(std::move(config)) {}
 
   auto &getCommandService() { return command_service; }
 
@@ -55,15 +43,13 @@ class TestIrohad : public Irohad {
   void run() override {
     grpc::ServerBuilder builder;
     int port = 0;
-    builder.AddListeningPort("0.0.0.0:" + std::to_string(internal_port_),
-                             grpc::InsecureServerCredentials(),
-                             &port);
+    builder.AddListeningPort(
+        peer.address, grpc::InsecureServerCredentials(), &port);
     builder.RegisterService(ordering_init.ordering_gate_transport.get());
     builder.RegisterService(ordering_init.ordering_service_transport.get());
     builder.RegisterService(yac_init.consensus_network.get());
     builder.RegisterService(loader_init.service.get());
     internal_server = builder.BuildAndStart();
-    internal_thread = std::thread([this] { internal_server->Wait(); });
     log_->info("===> iroha initialized");
   }
 };
@@ -76,14 +62,7 @@ class TxPipelineIntegrationTest : public iroha::ametsuchi::AmetsuchiTest {
 
   void SetUp() override {
     iroha::ametsuchi::AmetsuchiTest::SetUp();
-    genesis_block =
-        iroha::model::generators::BlockGenerator().generateGenesisBlock(
-            {"0.0.0.0:10001"});
-    manager = std::make_shared<iroha::KeysManagerImpl>("node0");
-    auto keypair = manager->loadKeys().value();
-
-    irohad = std::make_shared<TestIrohad>(
-        block_store_path, redishost_, redisport_, pgopt_, 0, 10001, keypair);
+    irohad = std::make_shared<TestIrohad>(std::move(this->config_));
 
     ASSERT_TRUE(irohad->storage);
 
@@ -177,8 +156,6 @@ class TxPipelineIntegrationTest : public iroha::ametsuchi::AmetsuchiTest {
 
   std::vector<iroha::model::Proposal> proposals;
   std::vector<iroha::model::Block> blocks;
-
-  std::shared_ptr<iroha::KeysManager> manager;
 };
 
 TEST_F(TxPipelineIntegrationTest, TxPipelineTest) {
@@ -193,6 +170,8 @@ TEST_F(TxPipelineIntegrationTest, TxPipelineTest) {
   auto tx =
       iroha::model::generators::TransactionGenerator().generateTransaction(
           "admin@test", 1, {cmd});
+
+  //  TODO(@warchant): change to load from config
   iroha::KeysManagerImpl manager("admin@test");
   auto keypair = manager.loadKeys().value();
   iroha::model::ModelCryptoProviderImpl provider(keypair);

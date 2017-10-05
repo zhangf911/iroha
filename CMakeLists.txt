@@ -33,6 +33,7 @@ option(BENCHMARKING "Build benchmarks"       OFF)
 option(TESTING      "Build tests"            ON )
 option(COVERAGE     "Enable coverage"        OFF)
 option(FUZZING      "Build fuzzing binaries" OFF)
+option(IROHA_VERSION "Set version"           OFF)
 option(PACKAGE_ZIP  "Create ZIP package"     OFF)
 option(PACKAGE_TGZ  "Create TGZ package"     OFF)
 option(PACKAGE_RPM  "Create RPM package"     OFF)
@@ -86,7 +87,3 @@ if (FUZZING)
     message(Fuzzing with compilers other than clang does not supported yet)
   endif()
 endif()
-
-
-
-
