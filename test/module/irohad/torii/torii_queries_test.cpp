@@ -20,7 +20,7 @@ limitations under the License.
 #include "module/irohad/validation/validation_mocks.hpp"
 
 // to compare pb amount and iroha amount
-#include "model/converters/pb_common.hpp"
+#include "model/converters/pb_common_face.hpp"
 
 #include "main/server_runner.hpp"
 #include "torii/command_service.hpp"

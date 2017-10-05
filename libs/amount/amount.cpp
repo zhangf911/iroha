@@ -23,175 +23,178 @@
 
 namespace iroha {
 
-  // to raise to power integer values
-  int ipow(int base, int exp) {
-    int result = 1;
-    while (exp != 0) {
-      if (exp & 1) result *= base;
-      exp >>= 1;
-      base *= base;
+  namespace model {
+
+    // to raise to power integer values
+    int ipow(int base, int exp) {
+      int result = 1;
+      while (exp != 0) {
+        if (exp & 1) result *= base;
+        exp >>= 1;
+        base *= base;
+      }
+
+      return result;
     }
 
-    return result;
-  }
-
-  uint256_t getJointUint256(uint64_t first, uint64_t second, uint64_t third,
-                            uint64_t fourth) {
-    uint256_t res(0);
-    res |= first;
-    res <<= 64;
-    res |= second;
-    res <<= 64;
-    res |= third;
-    res <<= 64;
-    res |= fourth;
-    return res;
-  }
-
-  Amount::Amount() {}
-
-  Amount::Amount(uint256_t value) : value_(value) {}
-
-  Amount::Amount(uint256_t amount, uint8_t precision)
-      : value_(amount), precision_(precision) {}
-
-  Amount::Amount(uint64_t first, uint64_t second, uint64_t third,
-                 uint64_t fourth)
-      : Amount(first, second, third, fourth, 0) {}
-
-  Amount::Amount(uint64_t first, uint64_t second, uint64_t third,
-                 uint64_t fourth, uint8_t precision)
-      : precision_(precision) {
-    value_ = getJointUint256(first, second, third, fourth);
-  }
-
-  Amount::Amount(const Amount &am)
-      : value_(am.value_), precision_(am.precision_) {}
-
-  Amount &Amount::operator=(const Amount &other) {
-    // check for self-assignment
-    if (&other == this) return *this;
-    value_ = other.value_;
-    precision_ = other.precision_;
-    return *this;
-  }
-
-  Amount::Amount(Amount &&am) : value_(am.value_), precision_(am.precision_) {}
-
-  Amount &Amount::operator=(Amount &&other) {
-    std::swap(value_, other.value_);
-    std::swap(precision_, other.precision_);
-    return *this;
-  }
-
-  nonstd::optional<Amount> Amount::createFromString(std::string str_amount) {
-    // check if valid number
-    std::regex e("([0-9]*\\.[0-9]+|[0-9]+)");
-    if (!std::regex_match(str_amount, e)) {
-      return nonstd::nullopt;
+    uint256_t getJointUint256(uint64_t first, uint64_t second, uint64_t third,
+                              uint64_t fourth) {
+      uint256_t res(0);
+      res |= first;
+      res <<= 64;
+      res |= second;
+      res <<= 64;
+      res |= third;
+      res <<= 64;
+      res |= fourth;
+      return res;
     }
 
-    // get precision
-    auto dot_place = str_amount.find('.');
-    size_t precision;
-    if (dot_place > str_amount.size()) {
-      precision = 0;
-    } else {
-      precision = str_amount.size() - dot_place - 1;
-      // erase dot from the string
-      str_amount.erase(std::remove(str_amount.begin(), str_amount.end(), '.'),
-                       str_amount.end());
+    Amount::Amount() {}
+
+    Amount::Amount(uint256_t value) : value_(value) {}
+
+    Amount::Amount(uint256_t amount, uint8_t precision)
+        : value_(amount), precision_(precision) {}
+
+    Amount::Amount(uint64_t first, uint64_t second, uint64_t third,
+                   uint64_t fourth)
+        : Amount(first, second, third, fourth, 0) {}
+
+    Amount::Amount(uint64_t first, uint64_t second, uint64_t third,
+                   uint64_t fourth, uint8_t precision)
+        : precision_(precision) {
+      value_ = getJointUint256(first, second, third, fourth);
     }
 
-    auto begin = str_amount.find_first_not_of('0');
+    Amount::Amount(const Amount &am)
+        : value_(am.value_), precision_(am.precision_) {}
 
-    // create uint256 value from obtained string
-    uint256_t value(str_amount.substr(begin));
-    return Amount(value, precision);
-  }
-
-  uint256_t Amount::getIntValue() { return value_; }
-
-  uint8_t Amount::getPrecision() { return precision_; }
-
-  std::vector<uint64_t> Amount::to_uint64s() {
-    std::vector<uint64_t> array(4);
-    ;
-    for (int i = 0; i < 4; i++) {
-      uint64_t res = (value_ >> i * 64).convert_to<uint64_t>();
-      array[3 - i] = res;
+    Amount &Amount::operator=(const Amount &other) {
+      // check for self-assignment
+      if (&other == this) return *this;
+      value_ = other.value_;
+      precision_ = other.precision_;
+      return *this;
     }
-    return array;
-  }
 
-  Amount Amount::percentage(uint256_t percents) const {
-    uint256_t new_val = value_ * percents / 100;
-    return {new_val, precision_};
-  }
+    Amount::Amount(Amount &&am) : value_(am.value_), precision_(am.precision_) {}
 
-  Amount Amount::percentage(const Amount &am) const {
-    // multiply two amount values
-    uint256_t new_value = value_ * am.value_;
-
-    // new value should be decreased by the scale of am to move floating point
-    // to the left, as it is done when we multiply manually
-    new_value /= uint256_t(pow(10, am.precision_));
-    // to take percentage value we need divide by 100
-    new_value /= 100;
-    return {new_value, precision_};
-  }
-
-  Amount Amount::add(const Amount &other) const {
-    auto new_val = value_ + other.value_;
-    return {new_val, precision_};
-  }
-
-  Amount Amount::subtract(const Amount &other) const {
-    auto new_val = value_ - other.value_;
-    return {new_val, precision_};
-  }
-
-  int Amount::compareTo(const Amount &other) const {
-    if (precision_ == other.precision_) {
-      return (value_ < other.value_) ? -1 : (value_ > other.value_) ? 1 : 0;
+    Amount &Amount::operator=(Amount &&other) {
+      std::swap(value_, other.value_);
+      std::swap(precision_, other.precision_);
+      return *this;
     }
-    // when different precisions transform to have the same scale
-    auto max_precision = std::max(precision_, other.precision_);
-    auto val1 = value_ * ipow(10, max_precision - precision_);
-    auto val2 = other.value_ * ipow(10, max_precision - other.precision_);
-    return (val1 < val2) ? -1 : (val1 > val2) ? 1 : 0;
-  }
 
-  bool Amount::operator==(const Amount &other) const {
-    return compareTo(other) == 0;
-  }
+    nonstd::optional<Amount> Amount::createFromString(std::string str_amount) {
+      // check if valid number
+      std::regex e("([0-9]*\\.[0-9]+|[0-9]+)");
+      if (!std::regex_match(str_amount, e)) {
+        return nonstd::nullopt;
+      }
 
-  bool Amount::operator!=(const Amount &other) const {
-    return compareTo(other) != 0;
-  }
+      // get precision
+      auto dot_place = str_amount.find('.');
+      size_t precision;
+      if (dot_place > str_amount.size()) {
+        precision = 0;
+      } else {
+        precision = str_amount.size() - dot_place - 1;
+        // erase dot from the string
+        str_amount.erase(std::remove(str_amount.begin(), str_amount.end(), '.'),
+                         str_amount.end());
+      }
 
-  bool Amount::operator<(const Amount &other) const {
-    return compareTo(other) < 0;
-  }
+      auto begin = str_amount.find_first_not_of('0');
 
-  bool Amount::operator>(const Amount &other) const {
-    return compareTo(other) > 0;
-  }
-
-  bool Amount::operator<=(const Amount &other) const {
-    return compareTo(other) <= 0;
-  }
-
-  bool Amount::operator>=(const Amount &other) const {
-    return compareTo(other) >= 0;
-  }
-
-  std::string Amount::to_string() const {
-    if (precision_ > 0) {
-      cpp_dec_float_50 float50(value_);
-      float50 /= pow(10, precision_);
-      return float50.str(precision_, std::ios_base::fixed);
+      // create uint256 value from obtained string
+      uint256_t value(str_amount.substr(begin));
+      return Amount(value, precision);
     }
-    return value_.str(0, std::ios_base::fixed);
+
+    uint256_t Amount::getIntValue() { return value_; }
+
+    uint8_t Amount::getPrecision() { return precision_; }
+
+    std::vector<uint64_t> Amount::to_uint64s() {
+      std::vector<uint64_t> array(4);;
+      for (int i = 0; i < 4; i++) {
+        uint64_t res = (value_ >> i * 64).convert_to<uint64_t>();
+        array[3 - i] = res;
+      }
+      return array;
+    }
+
+    Amount Amount::percentage(uint256_t percents) const {
+      uint256_t new_val = value_ * percents / 100;
+      return {new_val, precision_};
+    }
+
+    Amount Amount::percentage(const Amount &am) const {
+      // multiply two amount values
+      uint256_t new_value = value_ * am.value_;
+
+      // new value should be decreased by the scale of am to move floating point
+      // to the left, as it is done when we multiply manually
+      new_value /= uint256_t(pow(10, am.precision_));
+      // to take percentage value we need divide by 100
+      new_value /= 100;
+      return {new_value, precision_};
+    }
+
+    Amount Amount::add(const Amount &other) const {
+      auto new_val = value_ + other.value_;
+      return {new_val, precision_};
+    }
+
+    Amount Amount::subtract(const Amount &other) const {
+      auto new_val = value_ - other.value_;
+      return {new_val, precision_};
+    }
+
+    int Amount::compareTo(const Amount &other) const {
+      if (precision_ == other.precision_) {
+        return (value_ < other.value_) ? -1 : (value_ > other.value_) ? 1 : 0;
+      }
+      // when different precisions transform to have the same scale
+      auto max_precision = std::max(precision_, other.precision_);
+      auto val1 = value_ * ipow(10, max_precision - precision_);
+      auto val2 = other.value_ * ipow(10, max_precision - other.precision_);
+      return (val1 < val2) ? -1 : (val1 > val2) ? 1 : 0;
+    }
+
+    bool Amount::operator==(const Amount &other) const {
+      return compareTo(other) == 0;
+    }
+
+    bool Amount::operator!=(const Amount &other) const {
+      return compareTo(other) != 0;
+    }
+
+    bool Amount::operator<(const Amount &other) const {
+      return compareTo(other) < 0;
+    }
+
+    bool Amount::operator>(const Amount &other) const {
+      return compareTo(other) > 0;
+    }
+
+    bool Amount::operator<=(const Amount &other) const {
+      return compareTo(other) <= 0;
+    }
+
+    bool Amount::operator>=(const Amount &other) const {
+      return compareTo(other) >= 0;
+    }
+
+    std::string Amount::to_string() const {
+      if (precision_ > 0) {
+        cpp_dec_float_50 float50(value_);
+        float50 /= pow(10, precision_);
+        return float50.str(precision_, std::ios_base::fixed);
+      }
+      return value_.str(0, std::ios_base::fixed);
+    }
+
   }
 }  // namespace iroha

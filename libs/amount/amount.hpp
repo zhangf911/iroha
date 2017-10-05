@@ -25,154 +25,157 @@
 
 namespace iroha {
 
-  using namespace boost::multiprecision;
+  namespace model {
 
-  /**
-   * Keeps integer and scale values allowing performing math
-   * operations on them
-   */
-  class Amount {
-   public:
-    /**
-     * Creates Amount with integer = 0 and scale = 0
-     */
-    Amount();
+    using namespace boost::multiprecision;
 
     /**
-     * Amount with integer = amount and scale = 0
-     * @param amount integer part
+     * Keeps integer and scale values allowing performing math
+     * operations on them
      */
-    Amount(uint256_t amount);
+    class Amount {
+     public:
+      /**
+       * Creates Amount with integer = 0 and scale = 0
+       */
+      Amount();
 
-    /**
-     * Amount with provided integer and scale part
-     * @param amount integer part
-     * @param precision scale part
-     */
-    Amount(uint256_t amount, uint8_t precision);
+      /**
+       * Amount with integer = amount and scale = 0
+       * @param amount integer part
+       */
+      Amount(uint256_t amount);
 
-    Amount(uint64_t first, uint64_t second, uint64_t third, uint64_t fourth);
+      /**
+       * Amount with provided integer and scale part
+       * @param amount integer part
+       * @param precision scale part
+       */
+      Amount(uint256_t amount, uint8_t precision);
 
-    Amount(uint64_t first, uint64_t second, uint64_t third, uint64_t fourth,
-           uint8_t precision);
+      Amount(uint64_t first, uint64_t second, uint64_t third, uint64_t fourth);
 
-    std::vector<uint64_t> to_uint64s();
+      Amount(uint64_t first, uint64_t second, uint64_t third, uint64_t fourth,
+             uint8_t precision);
 
-    /**
-     * Copy constructor
-     */
-    Amount(const Amount&);
-    Amount& operator=(const Amount&);
+      std::vector<uint64_t> to_uint64s();
 
-    /**
-     * Move constructor
-     */
-    Amount(Amount&&);
-    Amount& operator=(Amount&&);
+      /**
+       * Copy constructor
+       */
+      Amount(const Amount &);
+      Amount &operator=(const Amount &);
 
-    uint256_t getIntValue();
-    uint8_t getPrecision();
+      /**
+       * Move constructor
+       */
+      Amount(Amount &&);
+      Amount &operator=(Amount &&);
 
-    static nonstd::optional<Amount> createFromString(std::string str_amount);
+      uint256_t getIntValue();
+      uint8_t getPrecision();
 
-    /**
-     * Takes percentage from current amount
-     * @param percents
-     * @return
-     */
-    Amount percentage(uint256_t percents) const;
+      static nonstd::optional<Amount> createFromString(std::string str_amount);
 
-    /**
-     * Takes percentage represented as amount value
-     * The current scale and scale of percents may differ
-     * @param percents
-     * @return
-     */
-    Amount percentage(const Amount& percents) const;
+      /**
+       * Takes percentage from current amount
+       * @param percents
+       * @return
+       */
+      Amount percentage(uint256_t percents) const;
 
-    /**
-     * Sums up two optionals of the amounts.
-     * Requires to have the same scale.
-     * Otherwise nullopt is returned
-     * @param a left term
-     * @param b right term
-     * @param optional result
-     */
-    friend nonstd::optional<Amount> operator+(nonstd::optional<Amount> a,
-                                              nonstd::optional<Amount> b) {
-      // check precisions
-      if (a->precision_ != b->precision_) {
-        return nonstd::nullopt;
+      /**
+       * Takes percentage represented as amount value
+       * The current scale and scale of percents may differ
+       * @param percents
+       * @return
+       */
+      Amount percentage(const Amount &percents) const;
+
+      /**
+       * Sums up two optionals of the amounts.
+       * Requires to have the same scale.
+       * Otherwise nullopt is returned
+       * @param a left term
+       * @param b right term
+       * @param optional result
+       */
+      friend nonstd::optional<Amount> operator+(nonstd::optional<Amount> a,
+                                                nonstd::optional<Amount> b) {
+        // check precisions
+        if (a->precision_ != b->precision_) {
+          return nonstd::nullopt;
+        }
+        auto res = a->add(*b);
+        // check overflow
+        if (res.value_ < a->value_ or res.value_ < b->value_) {
+          return nonstd::nullopt;
+        }
+        return res;
       }
-      auto res = a->add(*b);
-      // check overflow
-      if (res.value_ < a->value_ or res.value_ < b->value_) {
-        return nonstd::nullopt;
+
+      /**
+       * Subtracts right term from the left term
+       * Requires to have the same scale.
+       * Otherwise nullopt is returned
+       * @param a left term
+       * @param b right term
+       * @param optional result
+       */
+      friend nonstd::optional<Amount> operator-(nonstd::optional<Amount> a,
+                                                nonstd::optional<Amount> b) {
+        // check precisions
+        if (a->precision_ != b->precision_) {
+          return nonstd::nullopt;
+        }
+        // check if a greater than b
+        if (a->value_ < b->value_) {
+          return nonstd::nullopt;
+        }
+        return a->subtract(*b);
       }
-      return res;
-    }
 
-    /**
-     * Subtracts right term from the left term
-     * Requires to have the same scale.
-     * Otherwise nullopt is returned
-     * @param a left term
-     * @param b right term
-     * @param optional result
-     */
-    friend nonstd::optional<Amount> operator-(nonstd::optional<Amount> a,
-                                              nonstd::optional<Amount> b) {
-      // check precisions
-      if (a->precision_ != b->precision_) {
-        return nonstd::nullopt;
-      }
-      // check if a greater than b
-      if (a->value_ < b->value_) {
-        return nonstd::nullopt;
-      }
-      return a->subtract(*b);
-    }
+      /**
+       * Comparisons are possible between amounts with different precisions.
+       *
+       * @return
+       */
+      bool operator==(const Amount &) const;
+      bool operator!=(const Amount &) const;
+      bool operator<(const Amount &) const;
+      bool operator>(const Amount &) const;
+      bool operator<=(const Amount &) const;
+      bool operator>=(const Amount &) const;
 
-    /**
-     * Comparisons are possible between amounts with different precisions.
-     *
-     * @return
-     */
-    bool operator==(const Amount&) const;
-    bool operator!=(const Amount&) const;
-    bool operator<(const Amount&) const;
-    bool operator>(const Amount&) const;
-    bool operator<=(const Amount&) const;
-    bool operator>=(const Amount&) const;
+      std::string to_string() const;
+      ~Amount() = default;
 
-    std::string to_string() const;
-    ~Amount() = default;
+     private:
+      /**
+       * Support function for comparison operators.
+       * Returns 0 when equal, -1 when current Amount smaller, and 1 when it is
+       * greater
+       * @param other
+       * @return
+       */
+      int compareTo(const Amount &other) const;
 
-   private:
-    /**
-     * Support function for comparison operators.
-     * Returns 0 when equal, -1 when current Amount smaller, and 1 when it is
-     * greater
-     * @param other
-     * @return
-     */
-    int compareTo(const Amount& other) const;
+      /**
+       * Sums two amounts.
+       * @return
+       */
+      Amount add(const Amount &) const;
+      /**
+       * Subtracts one amount from another.
+       * Requires to have the same scale between both amounts.
+       * Otherwise nullopt is returned
+       * @return
+       */
+      Amount subtract(const Amount &) const;
 
-    /**
-     * Sums two amounts.
-     * @return
-     */
-    Amount add(const Amount&) const;
-    /**
-     * Subtracts one amount from another.
-     * Requires to have the same scale between both amounts.
-     * Otherwise nullopt is returned
-     * @return
-     */
-    Amount subtract(const Amount&) const;
-
-    boost::multiprecision::uint256_t value_{0};
-    uint8_t precision_{0};
-  };
+      boost::multiprecision::uint256_t value_{0};
+      uint8_t precision_{0};
+    };
+  }
 }
 #endif  // IROHA_AMOUNT_H

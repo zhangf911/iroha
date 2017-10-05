@@ -4,6 +4,12 @@ add_library(json_model_converters
     impl/json_common.cpp
     impl/json_query_factory.cpp
     impl/json_transaction_factory.cpp
+
+    json_block_factory.hpp
+    json_command_factory.hpp
+    json_common.hpp
+    json_query_factory.hpp
+    json_transaction_factory.hpp
     )
 target_link_libraries(json_model_converters
     model
@@ -19,7 +25,15 @@ add_library(pb_model_converters
     impl/pb_query_factory.cpp
     impl/pb_query_response_factory.cpp
     impl/pb_transaction_factory.cpp
-    impl/pb_common.cpp
+    impl/pb_common_face.cpp
+
+    pb_block_factory.hpp
+    pb_common_face.hpp
+    pb_command_factory.hpp
+    pb_query_factory.hpp
+    pb_query_response_factory.hpp
+    pb_transaction_factory.hpp
+    pb_common.hpp
     )
 target_link_libraries(pb_model_converters
     model

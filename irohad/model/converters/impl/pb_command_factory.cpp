@@ -16,7 +16,7 @@
  */
 
 #include "model/converters/pb_command_factory.hpp"
-#include "model/converters/pb_common.hpp"
+#include "model/converters/pb_common_face.hpp"
 
 #include <commands.pb.h>
 #include <string>

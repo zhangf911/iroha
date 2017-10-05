@@ -19,73 +19,131 @@
 #define IROHA_PB_QUERY_RESPONSE_FACTORY_HPP
 
 #include <responses.pb.h>
+#include <boost/optional.hpp>
 #include <model/account_asset.hpp>
 #include <model/queries/responses/account_assets_response.hpp>
 #include <model/queries/responses/account_response.hpp>
-#include <nonstd/optional.hpp>
+#include "model/queries/responses/asset_response.hpp"
 #include "model/queries/responses/error_response.hpp"
+#include "model/queries/responses/roles_response.hpp"
 #include "model/queries/responses/signatories_response.hpp"
 #include "model/queries/responses/transactions_response.hpp"
-#include "model/queries/responses/roles_response.hpp"
-#include "model/queries/responses/asset_response.hpp"
 
 namespace iroha {
   namespace model {
     namespace converters {
-
       /**
        * Converting business objects to protobuf and vice versa
        */
       class PbQueryResponseFactory {
+        template <typename T>
+        using opt<T> = boost::optional<T>;
+        boost::none_t none;
+
        public:
-        nonstd::optional<protocol::QueryResponse> serialize(
-            const std::shared_ptr<QueryResponse> query_response) const;
+        /// contract for the interface of serializers
+        template <typename T, typename U>
+        T serialize(const U &) const;
 
-        protocol::Account serializeAccount(const model::Account &account) const;
-        model::Account deserializeAccount(
-            const protocol::Account &pb_account) const;
+        /// contract for the interface of deserializers
+        template <typename T, typename U>
+        opt<T> deserialize(const U &) const;
 
-        protocol::AccountResponse serializeAccountResponse(
-            const model::AccountResponse &accountResponse) const;
-        model::AccountResponse deserializeAccountResponse(
-            const protocol::AccountResponse pb_response) const;
+        template <>
+        protocol::QueryResponse serialize(const model::QueryResponse &) const;
 
-        protocol::AccountAsset serializeAccountAsset(
-            const model::AccountAsset &account_asset) const;
-        model::AccountAsset deserializeAccountAsset(
-            const protocol::AccountAsset &account_asset) const;
+        template <>
+        opt<model::QueryResponse> deserialize(
+            const protocol::QueryResponse &) const;
 
-        protocol::AccountAssetResponse serializeAccountAssetResponse(
-            const model::AccountAssetResponse &accountAssetResponse) const;
-        model::AccountAssetResponse deserializeAccountAssetResponse(
-            const protocol::AccountAssetResponse &account_asset_response) const;
+        /// serialize model::Account
+        template <>
+        protocol::Account serialize(const model::Account &) const;
 
-        protocol::SignatoriesResponse serializeSignatoriesResponse(
-            const model::SignatoriesResponse &signatoriesResponse) const;
-        model::SignatoriesResponse deserializeSignatoriesResponse(
-            const protocol::SignatoriesResponse &signatoriesResponse) const;
+        /// deserialize model::Account
+        template <>
+        opt<model::Account> deserialize(const protocol::Account &) const;
 
-        protocol::TransactionsResponse serializeTransactionsResponse(
-            const model::TransactionsResponse &transactionsResponse) const;
-        model::TransactionsResponse deserializeTransactionsResponse(
-            const protocol::TransactionsResponse &tx_response) const;
+        /// serialize model::AccountResponse
+        template <>
+        protocol::AccountResponse serialize(
+            const model::AccountResponse &) const;
 
-        protocol::AssetResponse serializeAssetResponse(
-            const model::AssetResponse &response) const;
-        model::AssetResponse deserializeAssetResponse(
-            const protocol::AssetResponse &response) const;
+        /// deserialize model::AccountResponse
+        template <>
+        opt<model::AccountResponse> deserialize(
+            const protocol::AccountResponse &) const;
 
-        protocol::RolesResponse serializeRolesResponse(
-            const model::RolesResponse &response) const;
-        model::RolesResponse deserializeRolesResponse(
-            const protocol::RolesResponse &response) const;
+        /// serialize model::AccountAsset
+        template <>
+        protocol::AccountAsset serialize(const model::AccountAsset &) const;
 
-        protocol::RolePermissionsResponse serializeRolePermissionsResponse(
-            const model::RolePermissionsResponse &response) const;
-        model::RolePermissionsResponse deserializeRolePermissionsResponse(
-            const protocol::RolePermissionsResponse &response) const;
+        /// deserialize model::AccountAsset
+        template <>
+        opt<model::AccountAsset> deserialize(
+            const protocol::AccountAsset &) const;
 
-        protocol::ErrorResponse serializeErrorResponse(
+        /// serialize model::AccountAsset
+        template <>
+        protocol::AccountAssetResponse serialize(
+            const model::AccountAssetResponse &) const;
+
+        /// deserialize model::AccountAsset
+        template <>
+        opt<model::AccountAssetResponse> deserialize(
+            const protocol::AccountAssetResponse &) const;
+
+        /// serialize model::SignatoriesResponse
+        template <>
+        protocol::SignatoriesResponse serialize(
+            const model::SignatoriesResponse &) const;
+
+        /// deserialize model::SignatoriesResponse
+        template <>
+        opt<model::SignatoriesResponse> deserialize(
+            const protocol::SignatoriesResponse &) const;
+
+        /// serialize model::TransactionsResponse
+        template <>
+        protocol::TransactionsResponse serialize(
+            const model::TransactionsResponse &) const;
+
+        /// deserialize model::TransactionsResponse
+        //        // TODO(@warchant): not implemented, implement
+        //        template <>
+        //        opt<model::TransactionsResponse> deserialize(
+        //            const protocol::TransactionsResponse &) const;
+
+        /// serialize model::AssetResponse
+        template <>
+        protocol::AssetResponse serialize(const model::AssetResponse &) const;
+
+        /// deserialize model::AssetResponse
+        template <>
+        opt<model::AssetResponse> deserialize(
+            const protocol::AssetResponse &) const;
+
+        /// serialize model::RolesResponse
+        template <>
+        protocol::RolesResponse serialize(const model::RolesResponse &) const;
+
+        /// deserialize model::RolesResponse
+        template <>
+        opt<model::RolesResponse> deserialize(
+            const protocol::RolesResponse &) const;
+
+        /// serialize model::RolePermissionsResponse
+        template <>
+        protocol::RolePermissionsResponse serialize(
+            const model::RolePermissionsResponse &) const;
+
+        /// deserialize model::RolePermissionsResponse
+        template <>
+        opt<model::RolePermissionsResponse> deserialize(
+            const protocol::RolePermissionsResponse &) const;
+
+        template <>
+        protocol::ErrorResponse serialize(
             const model::ErrorResponse &errorResponse) const;
       };
     }

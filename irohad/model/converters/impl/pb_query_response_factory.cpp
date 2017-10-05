@@ -16,271 +16,216 @@
  */
 
 #include "model/converters/pb_query_response_factory.hpp"
+#include <boost/assert.hpp>
+#include "model/converters/pb_common_face.hpp"
 #include "model/converters/pb_transaction_factory.hpp"
-#include "model/converters/pb_common.hpp"
 
 namespace iroha {
   namespace model {
     namespace converters {
 
-      nonstd::optional<protocol::QueryResponse>
-      PbQueryResponseFactory::serialize(
-          const std::shared_ptr<QueryResponse> query_response) const {
-        nonstd::optional<protocol::QueryResponse> response = nonstd::nullopt;
-        // TODO: refactor
-        if (instanceof <model::ErrorResponse>(*query_response)) {
-          response = nonstd::make_optional<protocol::QueryResponse>();
-          auto er = static_cast<model::ErrorResponse &>(*query_response);
-          auto pb_er = serializeErrorResponse(er);
-          response->mutable_error_response()->CopyFrom(pb_er);
+      template <>
+      protocol::ErrorResponse PbQueryResponseFactory::serialize(
+          const model::ErrorResponse &m) const {
+        protocol::ErrorResponse p;
+        switch (m.reason) {
+          case ErrorResponse::NO_ASSET:
+            p.set_reason(protocol::ErrorResponse::NO_ASSET);
+            break;
+          case ErrorResponse::STATELESS_INVALID:
+            p.set_reason(protocol::ErrorResponse::STATELESS_INVALID);
+            break;
+          case ErrorResponse::STATEFUL_INVALID:
+            p.set_reason(protocol::ErrorResponse::STATEFUL_INVALID);
+            break;
+          case ErrorResponse::NO_ACCOUNT:
+            p.set_reason(protocol::ErrorResponse::NO_ACCOUNT);
+            break;
+          case ErrorResponse::NO_ACCOUNT_ASSETS:
+            p.set_reason(protocol::ErrorResponse::NO_ACCOUNT_ASSETS);
+            break;
+          case ErrorResponse::NO_SIGNATORIES:
+            p.set_reason(protocol::ErrorResponse::NO_SIGNATORIES);
+            break;
+          case ErrorResponse::NOT_SUPPORTED:
+            p.set_reason(protocol::ErrorResponse::NOT_SUPPORTED);
+            break;
+          case ErrorResponse::NO_ROLES:
+            p.set_reason(protocol::ErrorResponse::NO_ROLES);
+            break;
+          default:
+            BOOST_ASSERT_MSG(false, "not implemented");
+            break;
         }
-        if (instanceof <model::AccountAssetResponse>(*query_response)) {
-          response = nonstd::make_optional<protocol::QueryResponse>();
-          response->mutable_account_assets_response()->CopyFrom(
-              serializeAccountAssetResponse(
-                  static_cast<model::AccountAssetResponse &>(*query_response)));
+        return p;
+      }
+
+      template <>
+      protocol::QueryResponse PbQueryResponseFactory::serialize(
+          const model::QueryResponse &m) const {
+        protocol::QueryResponse p;
+      }
+      template <>
+      opt<model::QueryResponse> PbQueryResponseFactory::deserialize(
+          const protocol::QueryResponse &) const {
+        return none;
+      }
+
+      template <>
+      protocol::Account PbQueryResponseFactory::serialize(
+          const model::Account &m) const {
+        protocol::Account p{};
+        p.set_quorum(m.quorum);
+        p.set_account_id(m.account_id);
+        p.set_domain_name(m.domain_name);
+
+        auto permissions = p.mutable_permissions();
+        permissions->set_set_quorum(m.permissions.set_quorum);
+        permissions->set_set_permissions(m.permissions.set_permissions);
+        permissions->set_remove_signatory(m.permissions.remove_signatory);
+        permissions->set_read_all_accounts(m.permissions.read_all_accounts);
+        permissions->set_issue_assets(m.permissions.issue_assets);
+        permissions->set_create_domains(m.permissions.create_domains);
+        permissions->set_create_accounts(m.permissions.create_accounts);
+        permissions->set_create_assets(m.permissions.create_assets);
+        permissions->set_can_transfer(m.permissions.can_transfer);
+        permissions->set_add_signatory(m.permissions.add_signatory);
+
+        return p;
+      }
+
+      template <>
+      opt<model::Account> PbQueryResponseFactory::deserialize(
+          const protocol::Account &p) const {
+        model::Account m{};
+        m.account_id = p.account_id();
+        m.quorum = p.quorum();
+        m.domain_name = p.domain_name();
+
+        m.permissions.add_signatory = p.permissions().add_signatory();
+        m.permissions.can_transfer = p.permissions().can_transfer();
+        m.permissions.create_assets = p.permissions().create_assets();
+        m.permissions.create_accounts = p.permissions().create_accounts();
+        m.permissions.create_domains = p.permissions().create_domains();
+        m.permissions.issue_assets = p.permissions().issue_assets();
+        m.permissions.read_all_accounts = p.permissions().read_all_accounts();
+        m.permissions.remove_signatory = p.permissions().remove_signatory();
+        m.permissions.set_permissions = p.permissions().set_permissions();
+        m.permissions.set_quorum = p.permissions().set_quorum();
+
+        return m;
+      }
+
+      template <>
+      protocol::AccountResponse PbQueryResponseFactory::serialize(
+          const model::AccountResponse &m) const {
+        protocol::AccountResponse p{};
+        p.mutable_account()->CopyFrom(serialize(m.account));
+        return p;
+      }
+
+      template <>
+      opt<model::AccountResponse> PbQueryResponseFactory::deserialize(
+          const protocol::AccountResponse &p) const {
+        model::AccountResponse m{};
+
+        auto d = deserialize(p.account());
+        if (d) {
+          m.account = d.value();
+          // TODO(@warchant): should we set m.query_hash?
+
+          return m;
+        } else {
+          return none;
         }
-        if (instanceof <model::AccountResponse>(*query_response)) {
-          response = nonstd::make_optional<protocol::QueryResponse>();
-          response->mutable_account_response()->CopyFrom(
-              serializeAccountResponse(
-                  static_cast<model::AccountResponse &>(*query_response)));
+      }
+
+      template <>
+      protocol::AccountAsset PbQueryResponseFactory::serialize(
+          const AccountAsset &m) const {
+        protocol::AccountAsset p{};
+        p.set_account_id(m.account_id);
+        p.set_asset_id(m.asset_id);
+        p.mutable_balance()->CopyFrom(serialize(m.balance));
+        return p;
+      }
+
+      template <>
+      opt<model::AccountAsset> PbQueryResponseFactory::deserialize(
+          const protocol::AccountAsset &p) const {
+        model::AccountAsset m{};
+        m.account_id = p.account_id();
+        m.balance = deserialize(p.balance());
+        m.asset_id = p.asset_id();
+        return m;
+      }
+
+      template <>
+      protocol::AccountAssetResponse PbQueryResponseFactory::serialize(
+          const model::AccountAssetResponse &m) const {
+        protocol::AccountAssetResponse p{};
+        auto a = p.mutable_account_asset();
+        a->set_asset_id(m.acct_asset.asset_id);
+        a->set_account_id(m.acct_asset.account_id);
+        a->mutable_balance()->CopyFrom(serialize(m.acct_asset.balance));
+        return p;
+      }
+
+      template <>
+      opt<model::AccountAssetResponse> PbQueryResponseFactory::deserialize(
+          const protocol::AccountAssetResponse &p) const {
+        model::AccountAssetResponse m{};
+        m.acct_asset.account_id = p.account_asset().account_id();
+        m.acct_asset.asset_id = p.account_asset().asset_id();
+        auto d = deserialize(p.account_asset().balance());
+        if (d) {
+          m.acct_asset.balance = d.value();
+          // TODO(@warchant): query hash is empty here
+
+          return m;
+        } else {
+          return none;
         }
-        if (instanceof <model::SignatoriesResponse>(*query_response)) {
-          response = nonstd::make_optional<protocol::QueryResponse>();
-          response->mutable_signatories_response()->CopyFrom(
-              serializeSignatoriesResponse(
-                  static_cast<model::SignatoriesResponse &>(*query_response)));
-        }
-        if (instanceof <model::TransactionsResponse>(*query_response)) {
-          response = nonstd::make_optional<protocol::QueryResponse>();
-          response->mutable_transactions_response()->CopyFrom(
-              serializeTransactionsResponse(
-                  static_cast<model::TransactionsResponse &>(*query_response)));
-        }
-        if (instanceof <model::AssetResponse>(*query_response)) {
-          response = nonstd::make_optional<protocol::QueryResponse>();
-          response->mutable_asset_response()->CopyFrom(serializeAssetResponse(
-              static_cast<model::AssetResponse &>(*query_response)));
-        }
-        if (instanceof <model::RolesResponse>(*query_response)) {
-          response = nonstd::make_optional<protocol::QueryResponse>();
-          response->mutable_roles_response()->CopyFrom(serializeRolesResponse(
-              static_cast<model::RolesResponse &>(*query_response)));
-        }
-        if (instanceof <model::RolePermissionsResponse>(*query_response)) {
-          response = nonstd::make_optional<protocol::QueryResponse>();
-          response->mutable_role_permissions_response()->CopyFrom(
-              serializeRolePermissionsResponse(
-                  static_cast<model::RolePermissionsResponse &>(
-                      *query_response)));
+      }
+
+      template <>
+      protocol::SignatoriesResponse PbQueryResponseFactory::serialize(
+          const model::SignatoriesResponse &m) const {
+        protocol::SignatoriesResponse p{};
+
+        for (const auto &key : m.keys) {
+          p.add_keys(key.data(), key.size());
         }
 
-        return response;
+        return p;
       }
 
-      protocol::Account PbQueryResponseFactory::serializeAccount(
-          const model::Account &account) const {
-        protocol::Account pb_account;
-        pb_account.set_quorum(account.quorum);
-        pb_account.set_account_id(account.account_id);
-        pb_account.set_domain_name(account.domain_name);
-
-        auto permissions = pb_account.mutable_permissions();
-        permissions->set_set_quorum(account.permissions.set_quorum);
-        permissions->set_set_permissions(account.permissions.set_permissions);
-        permissions->set_remove_signatory(account.permissions.remove_signatory);
-        permissions->set_read_all_accounts(
-            account.permissions.read_all_accounts);
-        permissions->set_issue_assets(account.permissions.issue_assets);
-        permissions->set_create_domains(account.permissions.create_domains);
-        permissions->set_create_accounts(account.permissions.create_accounts);
-        permissions->set_create_assets(account.permissions.create_assets);
-        permissions->set_can_transfer(account.permissions.can_transfer);
-        permissions->set_add_signatory(account.permissions.add_signatory);
-
-        return pb_account;
-      }
-
-      model::Account PbQueryResponseFactory::deserializeAccount(
-          const protocol::Account &pb_account) const {
-        model::Account res;
-        res.account_id = pb_account.account_id();
-        res.quorum = pb_account.quorum();
-        res.domain_name = pb_account.domain_name();
-
-        res.permissions.add_signatory =
-            pb_account.permissions().add_signatory();
-        res.permissions.can_transfer = pb_account.permissions().can_transfer();
-        res.permissions.create_assets =
-            pb_account.permissions().create_assets();
-        res.permissions.create_accounts =
-            pb_account.permissions().create_accounts();
-        res.permissions.create_domains =
-            pb_account.permissions().create_domains();
-        res.permissions.issue_assets = pb_account.permissions().issue_assets();
-        res.permissions.read_all_accounts =
-            pb_account.permissions().read_all_accounts();
-        res.permissions.remove_signatory =
-            pb_account.permissions().remove_signatory();
-        res.permissions.set_permissions =
-            pb_account.permissions().set_permissions();
-        res.permissions.set_quorum = pb_account.permissions().set_quorum();
-
-        return res;
-      }
-
-      protocol::AccountResponse
-      PbQueryResponseFactory::serializeAccountResponse(
-          const model::AccountResponse &accountResponse) const {
-        protocol::AccountResponse pb_response;
-        pb_response.mutable_account()->CopyFrom(
-            serializeAccount(accountResponse.account));
-        return pb_response;
-      }
-
-      model::AccountResponse PbQueryResponseFactory::deserializeAccountResponse(
-          const protocol::AccountResponse pb_response) const {
-        model::AccountResponse accountResponse;
-        accountResponse.account = deserializeAccount(pb_response.account());
-        return accountResponse;
-      }
-
-      protocol::AccountAsset PbQueryResponseFactory::serializeAccountAsset(
-          const model::AccountAsset &account_asset) const {
-        protocol::AccountAsset pb_account_asset;
-        pb_account_asset.set_account_id(account_asset.account_id);
-        pb_account_asset.set_asset_id(account_asset.asset_id);
-        auto pb_balance = pb_account_asset.mutable_balance();
-        pb_balance->CopyFrom(serializeAmount(account_asset.balance));
-        return pb_account_asset;
-      }
-
-      model::AccountAsset PbQueryResponseFactory::deserializeAccountAsset(
-          const protocol::AccountAsset &account_asset) const {
-        model::AccountAsset res;
-        res.account_id = account_asset.account_id();
-        res.balance = deserializeAmount(account_asset.balance());
-        res.asset_id = account_asset.asset_id();
-        return res;
-      }
-
-      protocol::AccountAssetResponse
-      PbQueryResponseFactory::serializeAccountAssetResponse(
-          const model::AccountAssetResponse &accountAssetResponse) const {
-        protocol::AccountAssetResponse pb_response;
-        auto pb_account_asset = pb_response.mutable_account_asset();
-        pb_account_asset->set_asset_id(
-            accountAssetResponse.acct_asset.asset_id);
-        pb_account_asset->set_account_id(
-            accountAssetResponse.acct_asset.account_id);
-        auto pb_amount = pb_account_asset->mutable_balance();
-        pb_amount->CopyFrom(serializeAmount(accountAssetResponse.acct_asset.balance));
-        return pb_response;
-      }
-
-      model::AccountAssetResponse
-      PbQueryResponseFactory::deserializeAccountAssetResponse(
-          const protocol::AccountAssetResponse &account_asset_response) const {
-        model::AccountAssetResponse res;
-        res.acct_asset.balance =
-            deserializeAmount(account_asset_response.account_asset().balance());
-        res.acct_asset.account_id =
-            account_asset_response.account_asset().account_id();
-        res.acct_asset.asset_id =
-            account_asset_response.account_asset().asset_id();
-        return res;
-      }
-
-      protocol::SignatoriesResponse
-      PbQueryResponseFactory::serializeSignatoriesResponse(
-          const model::SignatoriesResponse &signatoriesResponse) const {
-        protocol::SignatoriesResponse pb_response;
-
-        for (auto key : signatoriesResponse.keys) {
-          pb_response.add_keys(key.data(), key.size());
-        }
-        return pb_response;
-      }
-
-      model::SignatoriesResponse
-      PbQueryResponseFactory::deserializeSignatoriesResponse(
-          const protocol::SignatoriesResponse &signatoriesResponse) const {
+      template <>
+      opt<model::SignatoriesResponse> PbQueryResponseFactory::deserialize(
+          const protocol::SignatoriesResponse &p) const {
         model::SignatoriesResponse res{};
-        for (const auto &key : signatoriesResponse.keys()) {
+
+        res.keys.resize(static_cast<unsigned long>(p.keys_size()));
+        for (const auto &key : p.keys()) {
+          // TODO(@warchant): there should be validation
           pubkey_t pubkey;
           std::copy(key.begin(), key.end(), pubkey.begin());
           res.keys.push_back(pubkey);
         }
+
         return res;
       }
 
-      protocol::AssetResponse PbQueryResponseFactory::serializeAssetResponse(
-          const model::AssetResponse &response) const {
-        protocol::AssetResponse res;
-        auto asset = res.mutable_asset();
-        asset->set_asset_id(response.asset.asset_id);
-        asset->set_domain_id(response.asset.domain_id);
-        asset->set_precision(response.asset.precision);
-        return res;
-      }
-
-      model::AssetResponse PbQueryResponseFactory::deserializeAssetResponse(
-          const protocol::AssetResponse &response) const {
-        model::AssetResponse res;
-        auto asset = response.asset();
-        res.asset =
-            Asset(asset.asset_id(), asset.domain_id(), asset.precision());
-        return res;
-      }
-
-      protocol::RolesResponse PbQueryResponseFactory::serializeRolesResponse(
-          const model::RolesResponse &response) const {
-        protocol::RolesResponse res;
-        for (auto role : response.roles) {
-          res.add_roles(role);
-        }
-        return res;
-      }
-
-      model::RolesResponse PbQueryResponseFactory::deserializeRolesResponse(
-          const protocol::RolesResponse &response) const {
-        model::RolesResponse res{};
-        std::copy(response.roles().begin(), response.roles().end(),
-                  res.roles.begin());
-        return res;
-      }
-
-      protocol::RolePermissionsResponse
-      PbQueryResponseFactory::serializeRolePermissionsResponse(
-          const model::RolePermissionsResponse &response) const {
-        protocol::RolePermissionsResponse res;
-        for (auto perm : response.role_permissions) {
-          res.add_permissions(perm);
-        }
-        return res;
-      }
-
-      model::RolePermissionsResponse
-      PbQueryResponseFactory::deserializeRolePermissionsResponse(
-          const protocol::RolePermissionsResponse &response) const {
-        model::RolePermissionsResponse res;
-        std::copy(response.permissions().begin(), response.permissions().end(),
-                  res.role_permissions.begin());
-        return res;
-      }
-
-      protocol::TransactionsResponse
-      PbQueryResponseFactory::serializeTransactionsResponse(
-          const model::TransactionsResponse &transactionsResponse) const {
-        PbTransactionFactory pb_transaction_factory;
+      template <>
+      protocol::TransactionsResponse PbQueryResponseFactory::serialize(
+          const model::TransactionsResponse &m) const {
+        PbTransactionFactory p{};
 
         // converting observable to the vector using reduce
-        return transactionsResponse.transactions
+        return m.transactions
             .reduce(protocol::TransactionsResponse(),
-                    [&pb_transaction_factory](auto &&response, auto tx) {
-                      response.add_transactions()->CopyFrom(
-                          pb_transaction_factory.serialize(tx));
+                    [&p](auto &&response, const auto &tx) {
+                      response.add_transactions()->CopyFrom(p.serialize(tx));
                       return response;
                     },
                     [](auto &&response) { return response; })
@@ -288,36 +233,72 @@ namespace iroha {
             .first();
       }
 
-      protocol::ErrorResponse PbQueryResponseFactory::serializeErrorResponse(
-          const model::ErrorResponse &errorResponse) const {
-        protocol::ErrorResponse pb_response;
-        switch (errorResponse.reason) {
-          case ErrorResponse::NO_ASSET:
-            pb_response.set_reason(protocol::ErrorResponse::NO_ASSET);
-            break;
-          case ErrorResponse::STATELESS_INVALID:
-            pb_response.set_reason(protocol::ErrorResponse::STATELESS_INVALID);
-            break;
-          case ErrorResponse::STATEFUL_INVALID:
-            pb_response.set_reason(protocol::ErrorResponse::STATEFUL_INVALID);
-            break;
-          case ErrorResponse::NO_ACCOUNT:
-            pb_response.set_reason(protocol::ErrorResponse::NO_ACCOUNT);
-            break;
-          case ErrorResponse::NO_ACCOUNT_ASSETS:
-            pb_response.set_reason(protocol::ErrorResponse::NO_ACCOUNT_ASSETS);
-            break;
-          case ErrorResponse::NO_SIGNATORIES:
-            pb_response.set_reason(protocol::ErrorResponse::NO_SIGNATORIES);
-            break;
-          case ErrorResponse::NOT_SUPPORTED:
-            pb_response.set_reason(protocol::ErrorResponse::NOT_SUPPORTED);
-            break;
-          case ErrorResponse::NO_ROLES:
-            pb_response.set_reason(protocol::ErrorResponse::NO_ROLES);
-            break;
+      template <>
+      protocol::AssetResponse PbQueryResponseFactory::serialize(
+          const model::AssetResponse &m) const {
+        protocol::AssetResponse p{};
+        auto asset = p.mutable_asset();
+        asset->set_asset_id(m.asset.asset_id);
+        asset->set_domain_id(m.asset.domain_id);
+        asset->set_precision(m.asset.precision);
+        return p;
+      }
+
+      template <>
+      opt<model::AssetResponse> PbQueryResponseFactory::deserialize(
+          const protocol::AssetResponse &p) const {
+        model::AssetResponse m{};
+        auto asset = p.asset();
+
+        // TODO(@warchant): run-time validator should be here
+        BOOST_ASSERT_MSG(asset.precision() >= 0 && asset.precision() < 256,
+                         "Precision is out of bounds");
+
+        m.asset = Asset(asset.asset_id(),
+                        asset.domain_id(),
+                        static_cast<uint8_t>(asset.precision()));
+        return m;
+      }
+
+      template <>
+      protocol::RolesResponse PbQueryResponseFactory::serialize(
+          const model::RolesResponse &m) const {
+        protocol::RolesResponse p{};
+        for (const auto &role : m.roles) {
+          p.add_roles(role);
         }
-        return pb_response;
+        return p;
+      }
+
+      template <>
+      opt<model::RolesResponse> PbQueryResponseFactory::deserialize(
+          const protocol::RolesResponse &p) const {
+        model::RolesResponse m{};
+
+        if (p.roles_size() == 0) return none;
+
+        std::copy(p.roles().begin(), p.roles().end(), m.roles.begin());
+        return m;
+      }
+
+      template <>
+      protocol::RolePermissionsResponse PbQueryResponseFactory::serialize(
+          const model::RolePermissionsResponse &m) const {
+        protocol::RolePermissionsResponse p{};
+        for (const auto &perm : m.role_permissions) {
+          p.add_permissions(perm);
+        }
+        return p;
+      }
+
+      template <>
+      opt<model::RolePermissionsResponse> PbQueryResponseFactory::deserialize(
+          const protocol::RolePermissionsResponse &p) const {
+        model::RolePermissionsResponse m{};
+        std::copy(p.permissions().begin(),
+                  p.permissions().end(),
+                  m.role_permissions.begin());
+        return m;
       }
     }  // namespace converters
   }    // namespace model

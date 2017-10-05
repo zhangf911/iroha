@@ -15,27 +15,39 @@
  * limitations under the License.
  */
 
-#ifndef IROHA_PB_COMMON_HPP_
-#define IROHA_PB_COMMON_HPP_
+#ifndef IROHA_PB_COMMON_HPP
+#define IROHA_PB_COMMON_HPP
+
+#include "amount/amount.hpp"
+#include "commands.pb.h"
+#include "common/types.hpp"
+#include "crypto/hash.hpp"
+#include "pb_common.hpp"
 
 #include <boost/optional.hpp>
-#include "amount/amount.hpp"
 
 namespace iroha {
   namespace model {
     namespace converters {
 
-      using opt = boost::optional;  ///< use this optional
-      auto none = boost::none;      ///< copy boost::none (it is an instance)
 
-#define DEFINE_PROTO_CONVERTER(COMMAND)                  \
-  opt<protocol::COMMAND> toProtobuf(model::COMMAND const &); \
-  template <>                                            \
-  opt<model::COMMAND> fromProtobuf(protocol::COMMAND const &);
+      class AmountFactory {
+       public:
+      };
 
-      DEFINE_PROTO_CONVERTER(Amount);
     }
+  }
+
+  /**
+   * Calculate hash from protobuf model object
+   * @tparam T - protobuf model type
+   * @param pb - protobuf model object
+   * @return hash of object payload
+   */
+  template <typename T>
+  hash256_t hash(const T &pb) {
+    return sha3_256(pb.payload().SerializeAsString());
   }
 }
 
-#endif  //  IROHA_PB_COMMON_HPP_
+#endif  // IROHA_PB_COMMON_HPP

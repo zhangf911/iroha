@@ -23,7 +23,7 @@ extern "C" {
 
 #include "common/types.hpp"
 #include "model/converters/pb_block_factory.hpp"
-#include "model/converters/pb_common.hpp"
+#include "model/converters/pb_common_face.hpp"
 #include "model/converters/pb_query_factory.hpp"
 #include "model/converters/pb_transaction_factory.hpp"
 
