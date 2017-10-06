@@ -65,9 +65,6 @@ namespace iroha {
             std::make_shared<AppendRole>("admin@test", "admin"));
         tx.commands.push_back(
             std::make_shared<AppendRole>("admin@test", "money_creator"));
-        tx.commands.push_back(
-            std::make_shared<AppendRole>("test@test", "user"));
-        // TODO: sign transaction
         return tx;
       }
 
