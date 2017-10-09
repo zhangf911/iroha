@@ -25,6 +25,7 @@ compile_proto_to_grpc_cpp(peer_service.proto)
 compile_proto_to_grpc_cpp(yac.proto)
 compile_proto_to_grpc_cpp(ordering.proto)
 compile_proto_to_grpc_cpp(loader.proto)
+compile_proto_to_grpc_cpp(mst.proto)
 
 add_library(schema
     block.pb.cc
@@ -79,6 +80,15 @@ add_library(loader_grpc
     loader.grpc.pb.cc
     )
 target_link_libraries(loader_grpc
+    schema
+    grpc++
+    )
+
+add_library(mst_grpc
+    mst.pb.cc
+    mst.grpc.pb.cc
+    )
+target_link_libraries(mst_grpc
     schema
     grpc++
     )
