@@ -27,6 +27,8 @@ using namespace iroha::model::converters;
 using namespace iroha::model::generators;
 using namespace iroha::model;
 
+void f() {}
+
 void runQueryTest(std::shared_ptr<Query> query){
   PbQueryFactory queryFactory;
   auto pb_query = queryFactory.serialize(query);

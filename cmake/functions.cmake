@@ -6,17 +6,39 @@ function(strictmode target)
       CXX_STANDARD_REQUIRED ON
       CXX_EXTENSIONS OFF
       )
+
+
   # Enable more warnings and turn them into compile errors.
-  if ((CMAKE_CXX_COMPILER_ID STREQUAL "GNU") OR
-  (CMAKE_CXX_COMPILER_ID STREQUAL "Clang") OR
+  if ((CMAKE_CXX_COMPILER_ID STREQUAL "Clang") OR
   (CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang"))
-    target_compile_options(${target} PRIVATE -Wall -Wpedantic)
+    # TODO (@kitsu): should be removed after introducing variant
+    # hack for removing warning from typeid(*some_shared_ptr)
+    target_compile_options(${target} PRIVATE -Wall -Wpedantic -Werror -Wno-potentially-evaluated-expression)
+  elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+  # (CMAKE_CXX_COMPILER_ID STREQUAL "Clang") OR
+  # (CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang"))
+    target_compile_options(${target} PRIVATE -Wall -Wpedantic -Werror)
   elseif ((CMAKE_CXX_COMPILER_ID STREQUAL "MSVC") OR
   (CMAKE_CXX_COMPILER_ID STREQUAL "Intel"))
     target_compile_options(${target} PRIVATE /W3 /WX)
   else ()
     message(AUTHOR_WARNING "Unknown compiler: building target ${target} with default options")
   endif ()
+endfunction()
+
+# Creates library "library_name" with given arguments
+function(addlibrary library_name)
+  add_library(${library_name} ${ARGN})
+  get_target_property(library_type ${library_name} TYPE)
+  if (NOT ${library_type} STREQUAL "INTERFACE_LIBRARY")
+    strictmode(${library_name})
+  endif ()
+endfunction()
+
+# Creates executable "executable_name" with given arguments
+function(addexecutable executable_name)
+  add_executable(${executable_name} ${ARGN})
+  strictmode(${executable_name})
 endfunction()
 
 # Creates test "test_name", with "SOURCES" (use string as second argument)
