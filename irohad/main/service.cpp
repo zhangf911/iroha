@@ -30,13 +30,13 @@ using namespace iroha::torii;
 using namespace iroha::model::converters;
 using namespace iroha::consensus::yac;
 
-Service::Service(std::unique_ptr<Config> config)
+Application::Application(std::unique_ptr<Config> config)
     : config_(std::move(config)), log_(logger::log("irohad")) {
   log_->info("created");
   initStorage();
 }
 
-Service::~Service() {
+Application::~Application() {
   if (internal_server) {
     internal_server->Shutdown();
   }
@@ -48,7 +48,7 @@ Service::~Service() {
   }
 }
 
-void Service::init() {
+void Application::init() {
   initProtoFactories();
   initPeerQuery();
   initCryptoProvider();
@@ -65,7 +65,7 @@ void Service::init() {
   initQueryService();
 }
 
-void Service::initStorage() {
+void Application::initStorage() {
   storage = StorageImpl::create(
       config_->redis(), config_->postgres(), config_->blockStorage());
 
@@ -74,7 +74,7 @@ void Service::initStorage() {
   log_->info("[Init] => storage", logger::logBool(storage));
 }
 
-void Service::initProtoFactories() {
+void Application::initProtoFactories() {
   pb_tx_factory = std::make_shared<PbTransactionFactory>();
   pb_query_factory = std::make_shared<PbQueryFactory>();
   pb_query_response_factory = std::make_shared<PbQueryResponseFactory>();
@@ -84,20 +84,21 @@ void Service::initProtoFactories() {
   log_->info("[Init] => converters");
 }
 
-void Service::initPeerQuery() {
+
+void Application::initPeerQuery() {
   wsv = std::make_shared<ametsuchi::PeerQueryWsv>(storage->getWsvQuery());
 
   log_->info("[Init] => peer query");
 }
 
-void Service::initCryptoProvider() {
+void Application::initCryptoProvider() {
   crypto_verifier = std::make_shared<ModelCryptoProviderImpl>(
       config_->cryptography().keypair());
 
   log_->info("[Init] => crypto provider");
 }
 
-void Service::initValidators() {
+void Application::initValidators() {
   stateless_validator =
       std::make_shared<StatelessValidatorImpl>(crypto_verifier);
   stateful_validator = std::make_shared<StatefulValidatorImpl>();
@@ -106,14 +107,14 @@ void Service::initValidators() {
   log_->info("[Init] => validators");
 }
 
-void Service::initPeerQuery() {
+void Application::initPeerQuery() {
   wsv = std::make_shared<ametsuchi::PeerQueryWsv>(storage->getWsvQuery());
   BOOST_ASSERT(wsv != nullptr);
 
   log_->info("[Init] => peer query");
 }
 
-void Service::initOrderingGate() {
+void Application::initOrderingGate() {
   // maximum transactions in proposal
   const auto max_transactions_in_proposal = 10u;
 
@@ -127,7 +128,7 @@ void Service::initOrderingGate() {
              logger::logBool(ordering_gate));
 }
 
-void Service::initSimulator() {
+void Application::initSimulator() {
   simulator = std::make_shared<Simulator>(ordering_gate,
                                           stateful_validator,
                                           storage,
@@ -137,14 +138,14 @@ void Service::initSimulator() {
   log_->info("[Init] => init simulator");
 }
 
-void Service::initBlockLoader() {
+void Application::initBlockLoader() {
   block_loader = loader_init.initBlockLoader(
       wsv, storage->getBlockQuery(), crypto_verifier);
 
   log_->info("[Init] => block loader");
 }
 
-void Service::initConsensusGate() {
+void Application::initConsensusGate() {
   consensus_gate = yac_init.initConsensusGate(
       peer.address,
       wsv,
@@ -156,14 +157,14 @@ void Service::initConsensusGate() {
   log_->info("[Init] => consensus gate");
 }
 
-void Service::initSynchronizer() {
+void Application::initSynchronizer() {
   synchronizer = std::make_shared<SynchronizerImpl>(
       consensus_gate, chain_validator, storage, block_loader);
 
   log_->info("[Init] => synchronizer");
 }
 
-void Service::initPeerCommunicationService() {
+void Application::initPeerCommunicationService() {
   pcs = std::make_shared<PeerCommunicationServiceImpl>(ordering_gate,
                                                        synchronizer);
 
@@ -176,7 +177,7 @@ void Service::initPeerCommunicationService() {
   log_->info("[Init] => pcs");
 }
 
-void Service::initTransactionCommandService() {
+void Application::initTransactionCommandService() {
   auto tx_processor =
       std::make_shared<TransactionProcessorImpl>(pcs, stateless_validator);
 
@@ -186,7 +187,7 @@ void Service::initTransactionCommandService() {
   log_->info("[Init] => command service");
 }
 
-void Service::initQueryService() {
+void Application::initQueryService() {
   auto query_proccessing_factory = std::make_unique<QueryProcessingFactory>(
       storage->getWsvQuery(), storage->getBlockQuery());
 
@@ -199,7 +200,7 @@ void Service::initQueryService() {
   log_->info("[Init] => query service");
 }
 
-void Service::run() {
+void Application::run() {
   torii_server =
       std::make_unique<ServerRunner>(config_->torii().listenAddress());
 
@@ -226,4 +227,4 @@ void Service::run() {
   internal_server->Wait();
 }
 
-const Config &Service::config() const { return *config_; }
+const Config &Application::config() const { return *config_; }
