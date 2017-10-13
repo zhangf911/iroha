@@ -44,8 +44,8 @@ DECLARE_string(postgres_username);
 DECLARE_string(postgres_password);
 
 /// Keypair
-DECLARE_string(certificate);
-DECLARE_string(key);
+DECLARE_string(public_key);
+DECLARE_string(private_key);
 
 /// BlockStorage
 DECLARE_string(dbpath);
@@ -54,4 +54,4 @@ DECLARE_string(dbpath);
 DECLARE_string(torii_host);
 DECLARE_int32(torii_port);
 
-#endif  //  IROHA_FLAGS_HPP_
+#endif  // IROHA_FLAGS_HPP_

@@ -339,13 +339,5 @@ namespace iroha {
   inline bool instanceof (const T &ptr) {
     return typeid(Base) == typeid(ptr);
   }
-
-  inline keypair_t make_keypair(std::string pubkey, std::string privkey) {
-    keypair_t kp;
-    kp.pubkey = pubkey_t::from_string(pubkey);
-    kp.privkey = privkey_t::from_string(privkey);
-    return kp;
-  }
-
 }  // namespace iroha
 #endif  // IROHA_COMMON_TYPES_HPP

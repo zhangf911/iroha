@@ -63,8 +63,8 @@ namespace iroha {
        * @brief Everything that is required for cryptography is here.
        */
       struct Cryptography {
-        std::string certificate;  ///< content of the certificate
-        std::string key;          ///< content of the private key
+        std::string public_key;           ///< content of the public key
+        std::string private_key;          ///< content of the private key
 
         // TODO(@warchant): temporary solution. Refactor with Keypair object.
         keypair_t keypair() const noexcept;
@@ -197,7 +197,8 @@ namespace iroha {
     }
 
     inline keypair_t Config::Cryptography::keypair() const noexcept {
-      return make_keypair(certificate, key);
+      return keypair_t{iroha::pubkey_t::from_string(public_key),
+                       iroha::privkey_t::from_string(private_key)};
     }
   }
 }

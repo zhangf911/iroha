@@ -51,8 +51,8 @@ class FakeConfig : public iroha::config::Config {
     this->torii_.port = parseEnv("IROHA_TORII_PORT", 50051);
 
     iroha::keypair_t kp = iroha::create_keypair(iroha::create_seed("host"));
-    this->crypto_.key = kp.privkey.to_string();
-    this->crypto_.certificate = kp.pubkey.to_string();
+    this->crypto_.private_key = kp.privkey.to_string();
+    this->crypto_.public_key = kp.pubkey.to_string();
 
 //    this->options_.genesis_block = ?;
 
