@@ -116,13 +116,13 @@ DEFINE_string(postgres_password, "", "Define password for postgres user");
 DEFINE_validator(postgres_password, &non_empty_validator);
 
 /// Keypair
-// certificate
-DEFINE_string(certificate, "", "Define path to certificate in PEM format");
-DEFINE_validator(certificate, &filepath_validator);
+// public key
+DEFINE_string(public_key, "", "Define path to public key");
+DEFINE_validator(public_key, &filepath_validator);
 
-// key
-DEFINE_string(key, "", "Define path to EC private key in PEM format");
-DEFINE_validator(key, &filepath_validator);
+// private key
+DEFINE_string(private_key, "", "Define path to private key");
+DEFINE_validator(private_key, &filepath_validator);
 
 /// BlockStorage
 // database path

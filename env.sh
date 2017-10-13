@@ -17,6 +17,6 @@ export FLAGS_postgres_port=6379
 export FLAGS_postgres_username=postgres
 export FLAGS_postgres_password=mysecretpassword
 
-# peer's certificate and key
-export FLAGS_certificate=cert.crt
-export FLAGS_key=ec_key.pem
+# peer's public and private keys
+export FLAGS_public_key=node.pub
+export FLAGS_private_key=node.priv

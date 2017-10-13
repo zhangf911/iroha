@@ -38,8 +38,8 @@ namespace iroha {
       this->pg_.username = FLAGS_postgres_username;
       this->pg_.password = FLAGS_postgres_password;
 
-      this->crypto_.certificate = read_file(FLAGS_certificate);
-      this->crypto_.key = read_file(FLAGS_key);
+      this->crypto_.private_key = read_file(FLAGS_private_key);
+      this->crypto_.public_key = read_file(FLAGS_public_key);
 
       this->db_.path = FLAGS_dbpath;
 
