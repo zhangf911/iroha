@@ -43,17 +43,24 @@ class TestIrohad : public Application {
 
   void run() override {
     grpc::ServerBuilder builder;
-    int *port = nullptr;
+    int port = 0;
     builder.AddListeningPort(
-        peer.address, grpc::InsecureServerCredentials(), port);
-    BOOST_ASSERT_MSG(port != nullptr, "can not start the service");
-
+        peer.address, grpc::InsecureServerCredentials(), &port);
     builder.RegisterService(ordering_init.ordering_gate_transport.get());
     builder.RegisterService(ordering_init.ordering_service_transport.get());
     builder.RegisterService(yac_init.consensus_network.get());
     builder.RegisterService(loader_init.service.get());
     internal_server = builder.BuildAndStart();
+    ASSERT_NE(0, port);
     log_->info("===> iroha initialized");
+  }
+};
+
+class TxPipelineIntegrationConfig : public iroha::ametsuchi::AmetsuchiConfig {
+ public:
+  TxPipelineIntegrationConfig(const iroha::keypair_t keypair) {
+    crypto_.public_key = keypair.pubkey.to_string();
+    crypto_.private_key = keypair.privkey.to_string();
   }
 };
 
@@ -65,7 +72,14 @@ class TxPipelineIntegrationTest : public iroha::ametsuchi::AmetsuchiTest {
 
   void SetUp() override {
     iroha::ametsuchi::AmetsuchiTest::SetUp();
-    irohad = std::make_shared<TestIrohad>(std::move(this->config_));
+    genesis_block =
+        iroha::model::generators::BlockGenerator().generateGenesisBlock(
+            {"0.0.0.0:10001"});
+    manager = std::make_shared<iroha::KeysManagerImpl>("node0");
+    config_ = std::make_unique<TxPipelineIntegrationConfig>(
+        manager->loadKeys().value());
+
+    irohad = std::make_shared<TestIrohad>(std::move(config_));
 
     ASSERT_TRUE(irohad->storage);
 
@@ -80,6 +94,16 @@ class TxPipelineIntegrationTest : public iroha::ametsuchi::AmetsuchiTest {
 
     // start irohad
     irohad->run();
+  }
+
+  void TearDown() override {
+    iroha::ametsuchi::AmetsuchiTest::TearDown();
+    std::remove("node0.pub");
+    std::remove("node0.priv");
+    std::remove("admin@test.pub");
+    std::remove("admin@test.priv");
+    std::remove("test@test.pub");
+    std::remove("test@test.priv");
   }
 
   void sendTransactions(std::vector<iroha::model::Transaction> transactions) {
@@ -113,7 +137,7 @@ class TxPipelineIntegrationTest : public iroha::ametsuchi::AmetsuchiTest {
     auto proposal_wrapper = make_test_subscriber<CallExact>(
         irohad->getPeerCommunicationService()->on_proposal(), 1);
     proposal_wrapper.subscribe(
-        [this](auto &&proposal) { proposals.push_back(std::move(proposal)); });
+        [this](auto proposal) { proposals.push_back(std::move(proposal)); });
 
     // verify commit and block
     auto commit_wrapper = make_test_subscriber<CallExact>(
@@ -149,6 +173,8 @@ class TxPipelineIntegrationTest : public iroha::ametsuchi::AmetsuchiTest {
 
   std::vector<iroha::model::Proposal> proposals;
   std::vector<iroha::model::Block> blocks;
+
+  std::shared_ptr<iroha::KeysManager> manager;
 };
 
 TEST_F(TxPipelineIntegrationTest, TxPipelineTest) {
@@ -164,10 +190,9 @@ TEST_F(TxPipelineIntegrationTest, TxPipelineTest) {
       iroha::model::generators::TransactionGenerator().generateTransaction(
           "admin@test", 1, {cmd});
 
-  // TODO(@warchant): refactor with Keypair object
-  iroha::keypair_t client_keypair =
-      iroha::create_keypair(iroha::create_seed("zupa zecred passwort"));
-  iroha::model::ModelCryptoProviderImpl provider(client_keypair);
+  iroha::KeysManagerImpl manager("admin@test");
+  auto keypair = manager.loadKeys().value();
+  iroha::model::ModelCryptoProviderImpl provider(keypair);
   provider.sign(tx);
 
   sendTransactions({tx});

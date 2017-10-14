@@ -80,17 +80,23 @@ void Application::initProtoFactories() {
   pb_query_factory = std::make_shared<PbQueryFactory>();
   pb_query_response_factory = std::make_shared<PbQueryResponseFactory>();
 
-  BOOST_ASSERT(pb_tx_factory != nullptr);
-
   log_->info("[Init] => converters");
 }
 
 void Application::initPeer() {
   auto peers = wsv->getLedgerPeers().value();
 
-  model::Peer p;
-  p.pubkey = config_->cryptography().keypair().pubkey;
-  p.address = config_->torii().listenAddress();
+  auto it = std::find_if(peers.begin(), peers.end(), [this](auto &&peer) {
+    auto &&kp = config_->cryptography().keypair();
+    return peer.pubkey == kp.pubkey;
+  });
+
+  if (it == peers.end()) {
+    log_->error("Cannot find peer with given public key");
+    BOOST_ASSERT_MSG(false, "there is no peer with given pubkey");
+  }
+
+  peer = *it;
 
   log_->info("[Init] => peer address is {}", peer.address);
 }
@@ -209,23 +215,21 @@ void Application::run() {
       std::make_unique<ServerRunner>(config_->torii().listenAddress());
 
   grpc::ServerBuilder builder;
-  int *port = 0;
-  builder.AddListeningPort(config_->torii().listenAddress(),
-                           grpc::InsecureServerCredentials(),
-                           port);
-  BOOST_ASSERT(port != nullptr);
-
+  int port = 0;
+  builder.AddListeningPort(
+      peer.address, grpc::InsecureServerCredentials(), &port);
   builder.RegisterService(ordering_init.ordering_gate_transport.get());
   builder.RegisterService(ordering_init.ordering_service_transport.get());
   builder.RegisterService(yac_init.consensus_network.get());
   builder.RegisterService(loader_init.service.get());
 
   internal_server = builder.BuildAndStart();
+  BOOST_ASSERT(port != 0);
   server_thread = std::thread([this] {
     torii_server->run(std::move(command_service), std::move(query_service));
   });
 
-  log_->info("===> iroha initialized. torii is on port {}", *port);
+  log_->info("===> iroha initialized. torii is on port {}", port);
 
   torii_server->waitForServersReady();
   internal_server->Wait();
