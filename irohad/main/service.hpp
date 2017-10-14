@@ -66,7 +66,7 @@ class Application {
    */
   virtual void run();
 
-  ~Application();
+  virtual ~Application();
 
  protected:
   const std::unique_ptr<Config> config_;

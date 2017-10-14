@@ -84,7 +84,6 @@ void Application::initProtoFactories() {
   log_->info("[Init] => converters");
 }
 
-
 void Application::initPeerQuery() {
   wsv = std::make_shared<ametsuchi::PeerQueryWsv>(storage->getWsvQuery());
 
@@ -217,6 +216,7 @@ void Application::run() {
   builder.RegisterService(loader_init.service.get());
 
   internal_server = builder.BuildAndStart();
+  BOOST_ASSERT(port != 0);
   server_thread = std::thread([this] {
     torii_server->run(std::move(command_service), std::move(query_service));
   });

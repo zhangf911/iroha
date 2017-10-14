@@ -18,18 +18,43 @@
 #ifndef IROHA_AMETSUCHI_FIXTURE_HPP
 #define IROHA_AMETSUCHI_FIXTURE_HPP
 
-#include "common/files.hpp"
-#include "logger/logger.hpp"
-#include "main/config/config.hpp"
-
 #include <gtest/gtest.h>
 #include <cpp_redis/cpp_redis>
 #include <pqxx/pqxx>
-#include "config_fake.hpp"
 
+#include "common/files.hpp"
+#include "crypto/crypto.hpp"
+#include "logger/logger.hpp"
+#include "main/config/config.hpp"
+#include "util/string.hpp"
+#include "main/config/config.hpp"
+
+using namespace std::literals::string_literals;
+using iroha::string::util::from_string;
+
+template <typename T>
+T parseEnv(const char *name, T default_) {
+  auto v = std::getenv(name);
+  return v && strlen(v) > 0 ? from_string<T>(v) : default_;
+}
 namespace iroha {
   namespace ametsuchi {
+    class AmetsuchiConfig : public iroha::config::Config {
+     public:
+      AmetsuchiConfig() {
+        load();
+      }
 
+      void load() override {
+        db_.path = "/tmp/block_store";
+        pg_.host = parseEnv("IROHA_POSTGRES_HOST", "localhost"s);
+        pg_.port = parseEnv("IROHA_POSTGRES_PORT", 5432);
+        pg_.username = parseEnv("IROHA_POSTGRES_USER", "postgres"s);
+        pg_.password = parseEnv("IROHA_POSTGRES_PASSWORD", "mysecretpassword"s);
+        redis_.host = parseEnv("IROHA_REDIS_HOST", "localhost"s);
+        redis_.port = parseEnv("IROHA_REDIS_PORT", 6379);
+      }
+    };
 
     /**
      * Class with ametsuchi initialization
@@ -39,10 +64,12 @@ namespace iroha {
       virtual void SetUp() {
         auto log = logger::testLog("AmetsuchiTest");
 
-        config_ = std::make_unique<FakeConfig>();
+        config_ = std::make_unique<AmetsuchiConfig>();
+
         mkdir(config_->blockStorage().path.c_str(),
               S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
       }
+
       virtual void TearDown() {
         const auto drop = R"(
 DROP TABLE IF EXISTS account_has_signatory;
@@ -57,32 +84,26 @@ DROP TABLE IF EXISTS signatory;
 DROP TABLE IF EXISTS peer;
 DROP TABLE IF EXISTS role;
 )";
+        auto config = std::make_unique<AmetsuchiConfig>();
 
-        pqxx::connection connection(config_->postgres().options());
+        pqxx::connection connection(config->postgres().options());
         pqxx::work txn(connection);
         txn.exec(drop);
         txn.commit();
         connection.disconnect();
 
         cpp_redis::redis_client client;
-        client.connect(config_->redis().host, config_->redis().port);
+        client.connect(config->redis().host, config->redis().port);
         client.flushall();
         client.sync_commit();
-        client.disconnect();
 
-        iroha::remove_all(config_->blockStorage().path);
+        iroha::remove_all(config->blockStorage().path);
       }
 
       std::unique_ptr<iroha::config::Config> config_;
-
-      //      std::string pgopt_ =
-      //          "host=localhost port=5432 user=postgres
-      //          password=mysecretpassword";
-      //
-      //      std::string redishost_ = "localhost";
-      //      size_t redisport_ = 6379;
-      //
-      //      std::string block_store_path = "/tmp/block_store";
+      iroha::config::Config::BlockStorage storage;
+      iroha::config::Config::Postgres postgres;
+      iroha::config::Config::Redis redis;
     };
   }  // namespace ametsuchi
 }  // namespace iroha
