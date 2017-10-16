@@ -42,7 +42,7 @@ DEFINE_string(config, "", "Trusted peer's ip addresses");
 // DEFINE_string(genesis_block, "", "Genesis block for sending network");
 // DEFINE_validator(genesis_block, &iroha_cli::validate_genesis_block);
 
-DEFINE_bool(new_account, false, "Choose if account does not exist");
+DEFINE_bool(new_keypair, false, "Choose if keypair does not exist");
 DEFINE_string(name, "", "Name of the account");
 DEFINE_string(pass_phrase, "", "Name of the account");
 DEFINE_string(key_path, ".", "Path to user keys");
@@ -59,7 +59,7 @@ DEFINE_string(json_query, "", "Query in json format");
 DEFINE_bool(genesis_block,
             false,
             "Generate genesis block for new Iroha network");
-DEFINE_string(peers_address, "", "File with peers address");
+DEFINE_string(os_address, "", "Host and port of ordering service");
 
 // Interactive
 DEFINE_bool(interactive, false, "Interactive cli");
@@ -74,7 +74,7 @@ int main(int argc, char *argv[]) {
   gflags::ParseCommandLineFlags(&argc, &argv, true);
   gflags::ShutDownCommandLineFlags();
   auto logger = logger::log("CLI-MAIN");
-  if (FLAGS_new_account) {
+  if (FLAGS_new_keypair) {
     // Create new pub/priv key
     auto keysManager = iroha::KeysManagerImpl(FLAGS_name);
     if (not keysManager.createKeys(FLAGS_pass_phrase)) {
@@ -122,12 +122,12 @@ int main(int argc, char *argv[]) {
   } else if (FLAGS_genesis_block) {
     BlockGenerator generator;
 
-    if (FLAGS_peers_address.empty()) {
-      logger->error("--peers_address is empty");
+    if (FLAGS_os_address.empty()) {
+      logger->error("--os_address is empty");
       return -1;
     }
 
-    std::ifstream file(FLAGS_peers_address);
+    std::ifstream file(FLAGS_os_address);
     std::vector<std::string> peers_address;
     std::copy(std::istream_iterator<std::string>(file),
               std::istream_iterator<std::string>(),
