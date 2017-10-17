@@ -60,7 +60,7 @@ bool filepath_validator(const char *flagname, const std::string &path) {
     return false;
   }
 
-  if (is_existing_file(path)) {
+  if (not is_existing_file(path)) {
     log_->warn("-{} {} does not exist", flagname, path);
     return false;
   }
