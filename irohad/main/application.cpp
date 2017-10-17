@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-#include "main/service.hpp"
+#include "main/application.hpp"
 
 #include <boost/assert.hpp>
 

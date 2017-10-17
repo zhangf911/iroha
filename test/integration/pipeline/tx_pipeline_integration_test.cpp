@@ -22,7 +22,7 @@
 #include "framework/test_subscriber.hpp"
 #include "main/config/config.hpp"
 #include "main/raw_block_insertion.hpp"
-#include "main/service.hpp"
+#include "main/application.hpp"
 #include "model/generators/block_generator.hpp"
 #include "module/irohad/ametsuchi/ametsuchi_fixture.hpp"
 
