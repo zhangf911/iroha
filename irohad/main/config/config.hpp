@@ -20,6 +20,7 @@
 
 #include <sstream>
 #include <string>
+#include "common/byteutils.hpp"
 #include "common/types.hpp"
 
 namespace iroha {
@@ -32,9 +33,9 @@ namespace iroha {
     class Config {
      protected:
       /**
-        * @struct Config::Service
-        * @brief Network service.
-        */
+       * @struct Config::Service
+       * @brief Network service.
+       */
       struct Service {
         std::string host;
         uint16_t port;
@@ -63,8 +64,8 @@ namespace iroha {
        * @brief Everything that is required for cryptography is here.
        */
       struct Cryptography {
-        std::string public_key;           ///< content of the public key
-        std::string private_key;          ///< content of the private key
+        std::string public_key;   ///< content of the public key
+        std::string private_key;  ///< content of the private key
 
         // TODO(@warchant): temporary solution. Refactor with Keypair object.
         keypair_t keypair() const noexcept;
@@ -197,10 +198,15 @@ namespace iroha {
     }
 
     inline keypair_t Config::Cryptography::keypair() const noexcept {
-      return keypair_t{iroha::pubkey_t::from_string(public_key),
-                       iroha::privkey_t::from_string(private_key)};
+      // TODO (@warchant): /17/10/2017 temp solution, will be removed when we
+      // will use certificate
+      pubkey_t pub = hexstringToArray<pubkey_t::size()>(public_key)
+                         .value_or(pubkey_t::from_string(public_key));
+      privkey_t priv = hexstringToArray<privkey_t::size()>(private_key)
+                           .value_or(privkey_t::from_string(private_key));
+      return keypair_t{pub, priv};
     }
-  }
-}
+  }  // namespace config
+}  // namespace iroha
 
 #endif  //  IROHA_CONFIG_HPP_

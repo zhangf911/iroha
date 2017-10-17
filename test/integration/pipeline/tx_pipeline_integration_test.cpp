@@ -116,7 +116,7 @@ class TxPipelineIntegrationTest : public iroha::ametsuchi::AmetsuchiTest {
     expected_block.height = expected_proposal->height;
     expected_block.prev_hash = genesis_block.hash;
     expected_block.transactions = transactions;
-    expected_block.txs_number = transactions.size();
+    expected_block.txs_number = static_cast<uint16_t>(transactions.size());
     expected_block.created_ts = 0;
     expected_block.merkle_root.fill(0);
     expected_block.hash = iroha::hash(expected_block);
