@@ -31,7 +31,7 @@ target_link_libraries(raw_block_insertion
     )
 
 add_library(application
-    application.cpp
+        application.cpp
     impl/ordering_init.cpp
     impl/consensus_init.cpp
     impl/block_loader_init.cpp
@@ -55,13 +55,14 @@ target_link_libraries(application
     block_loader_service
     )
 
-add_executable(irohad irohad.cpp)
+add_executable(irohad main.cpp)
 target_link_libraries(irohad
     application
     raw_block_insertion
-    gflags
     rapidjson
-    keys_manager
+    irohad-config
     )
+
+add_subdirectory(config)
 
 add_install_step_for_bin(irohad)

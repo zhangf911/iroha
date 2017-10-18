@@ -42,8 +42,8 @@ using namespace framework::test_subscriber;
 
 TEST_F(AmetsuchiTest, GetBlocksCompletedWhenCalled) {
   // Commit block => get block => observable completed
-  auto storage =
-      StorageImpl::create(block_store_path, redishost_, redisport_, pgopt_);
+  auto storage = StorageImpl::create(config_->redis(), config_->postgres(),
+                                     config_->blockStorage());
   ASSERT_TRUE(storage);
   auto blocks = storage->getBlockQuery();
 
@@ -61,8 +61,8 @@ TEST_F(AmetsuchiTest, GetBlocksCompletedWhenCalled) {
 }
 
 TEST_F(AmetsuchiTest, SampleTest) {
-  auto storage =
-      StorageImpl::create(block_store_path, redishost_, redisport_, pgopt_);
+  auto storage = StorageImpl::create(config_->redis(), config_->postgres(),
+                                     config_->blockStorage());
   ASSERT_TRUE(storage);
   auto wsv = storage->getWsvQuery();
   auto blocks = storage->getBlockQuery();
@@ -222,8 +222,8 @@ TEST_F(AmetsuchiTest, SampleTest) {
 }
 
 TEST_F(AmetsuchiTest, PeerTest) {
-  auto storage =
-      StorageImpl::create(block_store_path, redishost_, redisport_, pgopt_);
+  auto storage = StorageImpl::create(config_->redis(), config_->postgres(),
+                                     config_->blockStorage());
   ASSERT_TRUE(storage);
   auto wsv = storage->getWsvQuery();
 
@@ -250,8 +250,8 @@ TEST_F(AmetsuchiTest, PeerTest) {
 }
 
 TEST_F(AmetsuchiTest, queryGetAccountAssetTransactionsTest) {
-  auto storage =
-      StorageImpl::create(block_store_path, redishost_, redisport_, pgopt_);
+  auto storage = StorageImpl::create(config_->redis(), config_->postgres(),
+                                     config_->blockStorage());
   ASSERT_TRUE(storage);
   auto wsv = storage->getWsvQuery();
   auto blocks = storage->getBlockQuery();
@@ -521,8 +521,8 @@ TEST_F(AmetsuchiTest, queryGetAccountAssetTransactionsTest) {
 }
 
 TEST_F(AmetsuchiTest, AddSignatoryTest) {
-  auto storage =
-      StorageImpl::create(block_store_path, redishost_, redisport_, pgopt_);
+  auto storage = StorageImpl::create(config_->redis(), config_->postgres(),
+                                     config_->blockStorage());
   ASSERT_TRUE(storage);
   auto wsv = storage->getWsvQuery();
 

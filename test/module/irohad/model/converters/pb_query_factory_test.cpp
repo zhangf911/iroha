@@ -86,7 +86,6 @@ TEST(PbQueryFactoryTest, SerializeGetSignatories){
 }
 
 TEST(PbQueryFactoryTest, get_roles){
-
   auto query = QueryGenerator{}.generateGetRoles();
   runQueryTest(query);
 }

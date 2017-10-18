@@ -27,18 +27,16 @@ namespace iroha {
   namespace ametsuchi {
 
     StorageImpl::StorageImpl(
-        std::string block_store_dir,
-        std::string redis_host,
-        std::size_t redis_port,
-        std::string postgres_options,
+        const Config::Redis &redisConf,
+        const Config::Postgres &pgConf,
+        const Config::BlockStorage &storeConf,
         std::unique_ptr<FlatFile> block_store,
         std::unique_ptr<cpp_redis::redis_client> index,
         std::unique_ptr<pqxx::lazyconnection> wsv_connection,
         std::unique_ptr<pqxx::nontransaction> wsv_transaction)
-        : block_store_dir_(std::move(block_store_dir)),
-          redis_host_(std::move(redis_host)),
-          redis_port_(redis_port),
-          postgres_options_(std::move(postgres_options)),
+        : redisConfig_(redisConf),
+          postgresConfig_(pgConf),
+          storeConfig_(storeConf),
           block_store_(std::move(block_store)),
           index_(std::move(index)),
           wsv_connection_(std::move(wsv_connection)),
@@ -61,7 +59,8 @@ namespace iroha {
       }
 
       auto postgres_connection =
-          std::make_unique<pqxx::lazyconnection>(postgres_options_);
+          std::make_unique<pqxx::lazyconnection>(postgresConfig_.options());
+
       try {
         postgres_connection->activate();
       } catch (const pqxx::broken_connection &e) {
@@ -85,7 +84,7 @@ namespace iroha {
       }
 
       auto postgres_connection =
-          std::make_unique<pqxx::lazyconnection>(postgres_options_);
+          std::make_unique<pqxx::lazyconnection>(postgresConfig_.options());
       try {
         postgres_connection->activate();
       } catch (const pqxx::broken_connection &e) {
@@ -97,7 +96,7 @@ namespace iroha {
 
       auto index = std::make_unique<cpp_redis::redis_client>();
       try {
-        index->connect(redis_host_, redis_port_);
+        index->connect(redisConfig_.host, redisConfig_.port);
       } catch (const cpp_redis::redis_error &e) {
         log_->error("Connection to Redis broken: {}", e.what());
         return nullptr;
@@ -119,36 +118,36 @@ namespace iroha {
     }
 
     nonstd::optional<ConnectionContext> StorageImpl::initConnections(
-        std::string block_store_dir,
-        std::string redis_host,
-        std::size_t redis_port,
-        std::string postgres_options) {
+        const Config::Redis &redis,
+        const Config::Postgres &pg,
+        const Config::BlockStorage &store) {
       auto log_ = logger::log("StorageImpl:initConnection");
       log_->info("Start storage creation");
 
-      auto block_store = FlatFile::create(block_store_dir);
+      auto block_store = FlatFile::create(store.path);
       if (!block_store) {
-        log_->error("Cannot create block store in {}", block_store_dir);
+        log_->error("Cannot create block store in {}", store.path);
         return nonstd::nullopt;
       }
       log_->info("block store created");
 
       auto index = std::make_unique<cpp_redis::redis_client>();
       try {
-        index->connect(redis_host, redis_port);
+        index->connect(redis.host, redis.port);
       } catch (const cpp_redis::redis_error &e) {
         log_->error(
-            "Connection {}:{} with Redis broken", redis_host, redis_port);
+            "Connection {}:{} with Redis is broken", redis.host, redis.port);
         return nonstd::nullopt;
       }
+
       log_->info("connection to Redis completed");
 
       auto postgres_connection =
-          std::make_unique<pqxx::lazyconnection>(postgres_options);
+          std::make_unique<pqxx::lazyconnection>(pg.options());
       try {
         postgres_connection->activate();
       } catch (const pqxx::broken_connection &e) {
-        log_->error("Cannot with PostgreSQL broken: {}", e.what());
+        log_->error("Cannot with PostgreSQL is broken: {}", e.what());
         return nonstd::nullopt;
       }
       log_->info("connection to PostgreSQL completed");
@@ -165,21 +164,18 @@ namespace iroha {
     }
 
     std::shared_ptr<StorageImpl> StorageImpl::create(
-        std::string block_store_dir,
-        std::string redis_host,
-        std::size_t redis_port,
-        std::string postgres_options) {
-      auto ctx = initConnections(
-          block_store_dir, redis_host, redis_port, postgres_options);
+        const Config::Redis &redis,
+        const Config::Postgres &pg,
+        const Config::BlockStorage &store) {
+      auto ctx = initConnections(redis, pg, store);
       if (not ctx.has_value()) {
         return nullptr;
       }
 
       return std::shared_ptr<StorageImpl>(
-          new StorageImpl(block_store_dir,
-                          redis_host,
-                          redis_port,
-                          postgres_options,
+          new StorageImpl(redis,
+                          pg,
+                          store,
                           std::move(ctx->block_store),
                           std::move(ctx->index),
                           std::move(ctx->pg_lazy),
@@ -188,13 +184,17 @@ namespace iroha {
 
     void StorageImpl::commit(std::unique_ptr<MutableStorage> mutableStorage) {
       std::unique_lock<std::shared_timed_mutex> write(rw_lock_);
+
       auto storage_ptr = std::move(mutableStorage);  // get ownership of storage
-      auto storage = static_cast<MutableStorageImpl *>(storage_ptr.get());
-      for (const auto &block : storage->block_store_) {
-        block_store_->add(block.first,
+      auto storage = dynamic_cast<MutableStorageImpl *>(storage_ptr.get());
+      for (const auto &entry : storage->block_store_) {
+        auto &id = entry.first;
+        auto &block = entry.second;
+        block_store_->add(id,
                           stringToBytes(model::converters::jsonToString(
-                              serializer_.serialize(block.second))));
+                              serializer_.serialize(block))));
       }
+
       storage->index_->exec();
       storage->index_->sync_commit();
 
