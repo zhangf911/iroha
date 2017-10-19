@@ -106,13 +106,6 @@ void Application::initValidators() {
   log_->info("[Init] => validators");
 }
 
-void Application::initPeerQuery() {
-  wsv = std::make_shared<ametsuchi::PeerQueryWsv>(storage->getWsvQuery());
-  BOOST_ASSERT(wsv != nullptr);
-
-  log_->info("[Init] => peer query");
-}
-
 void Application::initOrderingGate() {
   // maximum transactions in proposal
   const auto max_transactions_in_proposal = 10u;
@@ -146,7 +139,7 @@ void Application::initBlockLoader() {
 
 void Application::initConsensusGate() {
   consensus_gate = yac_init.initConsensusGate(
-      peer.address,
+      config_->torii().listenAddress(),
       wsv,
       simulator,
       block_loader,

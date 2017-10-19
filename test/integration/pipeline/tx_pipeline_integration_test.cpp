@@ -43,15 +43,15 @@ class TestIrohad : public Application {
 
   void run() override {
     grpc::ServerBuilder builder;
-    int port = 0;
+    int *port = 0;
     builder.AddListeningPort(
-        peer.address, grpc::InsecureServerCredentials(), &port);
+        config_->torii().listenAddress(), grpc::InsecureServerCredentials(), port);
     builder.RegisterService(ordering_init.ordering_gate_transport.get());
     builder.RegisterService(ordering_init.ordering_service_transport.get());
     builder.RegisterService(yac_init.consensus_network.get());
     builder.RegisterService(loader_init.service.get());
     internal_server = builder.BuildAndStart();
-    ASSERT_NE(0, port);
+    ASSERT_NE(0, *port);
     log_->info("===> iroha initialized");
   }
 };
