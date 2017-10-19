@@ -36,6 +36,12 @@ RUN git clone https://github.com/google/protobuf /tmp/protobuf; \
     ldconfig; \
     rm -rf /tmp/protobuf
 
+# install cliutils
+RUN git clone https://github.com/CLIUtils/CLI11 /tmp/cliutils; \
+    (cd /tmp/cliutils; git checkout v1.2.0); \
+    cp -r /tmp/cliutils/include/CLI /usr/local/include; \
+    rm -rf /tmp/cliutils
+
 # install gflags
 RUN git clone https://github.com/gflags/gflags /tmp/gflags; \
     (cd /tmp/gflags ; git checkout f8a0efe03aa69b3336d8e228b37d4ccb17324b88); \
