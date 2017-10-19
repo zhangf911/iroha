@@ -66,9 +66,6 @@ namespace iroha {
       struct Cryptography {
         std::string public_key;   ///< content of the public key
         std::string private_key;  ///< content of the private key
-
-        // TODO(@warchant): temporary solution. Refactor with Keypair object.
-        keypair_t keypair() const noexcept;
       };
 
       /**
@@ -195,16 +192,6 @@ namespace iroha {
 
     inline std::string Config::Torii::listenAddress() const noexcept {
       return this->host + ":" + std::to_string(this->port);
-    }
-
-    inline keypair_t Config::Cryptography::keypair() const noexcept {
-      // TODO (@warchant): /17/10/2017 temp solution, will be removed when we
-      // will use certificate
-      pubkey_t pub = hexstringToArray<pubkey_t::size()>(public_key)
-                         .value_or(pubkey_t::from_string(public_key));
-      privkey_t priv = hexstringToArray<privkey_t::size()>(private_key)
-                           .value_or(privkey_t::from_string(private_key));
-      return keypair_t{pub, priv};
     }
   }  // namespace config
 }  // namespace iroha

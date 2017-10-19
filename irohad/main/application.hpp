@@ -19,7 +19,6 @@
 #define IROHA_APPLICATION_HPP
 
 #include "ametsuchi/impl/storage_impl.hpp"
-#include "main/config/gflags_impl/gflags_config.hpp"
 #include "crypto/crypto.hpp"
 #include "logger/logger.hpp"
 #include "main/impl/block_loader_init.hpp"
@@ -52,14 +51,12 @@ using iroha::config::Config;
 class Application {
  public:
 
-  explicit Application(std::unique_ptr<Config>);
-
-  const Config &config() const;
+  Application();
 
   /**
    * Initialization of whole objects in system
    */
-  virtual void init();
+  virtual void init(std::unique_ptr<Config>);
 
   /**
    * Run worker threads for start performing

@@ -16,16 +16,14 @@ limitations under the License.
 
 #include "util/filesystem.hpp"
 
-#include <gflags/gflags.h>
-#include <gflags/gflags_completions.h>
-#include "main/config/gflags_impl/gflags_config.hpp"
+#include "config/cliutils/config.hpp"
 #include "main/raw_block_insertion.hpp"
 #include "main/application.hpp"
 
 #include "logger/logger.hpp"
 
 using iroha::config::Config;
-using iroha::config::GFlagsConfig;
+using iroha::config::CLIUtilsImpl;
 using Iroha = Application;
 using iroha::filesystem::util::read_file;
 
@@ -41,7 +39,7 @@ int main(int argc, char *argv[]) {
 // preprocessor trick, which helps to stringify arbitrary value
 #define STRINGIFY2(X) #X
 #define STRINGIFY(X) STRINGIFY2(X)
-    gflags::SetVersionString(STRINGIFY(IROHA_VERSION));
+    STRINGIFY(IROHA_VERSION);
 #endif
     std::stringstream ss;
     ss << "\n"
@@ -60,13 +58,11 @@ int main(int argc, char *argv[]) {
        << "\t-flag2=val\n"
        << "\t$ " << argv[0] << " -flagfile=/tmp/flags\n";
 
-    gflags::SetUsageMessage(ss.str());
-    gflags::ParseCommandLineFlags(&argc, &argv, true);
-    google::HandleCommandLineCompletions();
+
 
     // if something critical can not be parsed, throws exceptions descendants
     // from std::exception
-    Iroha irohad(std::make_unique<GFlagsConfig>());
+    Iroha irohad;
 
     // TODO(@warchant): refactor. Move this to Iroha as a separate
     // module
@@ -90,7 +86,9 @@ int main(int argc, char *argv[]) {
 
     // init pipeline components
     log->info("start initialization");
-    irohad.init();
+
+    std::unique_ptr<Config> config = std::make_unique<CLIUtilsImpl>(argc, argv);
+    irohad.init(std::move(config));
 
     // runs iroha
     log->info("iroha initialized");
@@ -99,9 +97,5 @@ int main(int argc, char *argv[]) {
   } catch (const std::exception &e) {
     log->error("FATAL: {}", e.what());
   }
-
-  // cleanup
-  gflags::ShutDownCommandLineFlags();
-
   return 0;
 }

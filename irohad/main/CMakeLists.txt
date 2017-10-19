@@ -63,6 +63,4 @@ target_link_libraries(irohad
     irohad-config
     )
 
-add_subdirectory(config)
-
 add_install_step_for_bin(irohad)

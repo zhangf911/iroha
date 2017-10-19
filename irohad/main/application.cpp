@@ -17,6 +17,7 @@
 
 #include "main/application.hpp"
 
+#include "config/config.hpp"
 #include <boost/assert.hpp>
 
 using namespace iroha;
@@ -30,8 +31,8 @@ using namespace iroha::torii;
 using namespace iroha::model::converters;
 using namespace iroha::consensus::yac;
 
-Application::Application(std::unique_ptr<Config> config)
-    : config_(std::move(config)), log_(logger::log("irohad")) {
+Application::Application()
+    : log_(logger::log("irohad")) {
   log_->info("created");
   initStorage();
 }
@@ -48,7 +49,9 @@ Application::~Application() {
   }
 }
 
-void Application::init() {
+void Application::init(std::unique_ptr<Config> c) {
+  // TODO: pass configs as dependencies
+
   initProtoFactories();
   initPeerQuery();
   initCryptoProvider();
@@ -219,5 +222,3 @@ void Application::run() {
   torii_server->waitForServersReady();
   internal_server->Wait();
 }
-
-const Config &Application::config() const { return *config_; }

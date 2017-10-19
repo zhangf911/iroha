@@ -15,21 +15,22 @@
  * limitations under the License.
  */
 
-#ifndef IROHA_MAIN_CONFIG_IMPL_HPP_
-#define IROHA_MAIN_CONFIG_IMPL_HPP_
+#ifndef IROHA_CONFIG_CLIUTILS_HPP_
+#define IROHA_CONFIG_CLIUTILS_HPP_
 
-#include "main/config/config.hpp"
+#include "config/config.hpp"
 
 namespace iroha {
   namespace config {
 
-    class GFlagsConfig : public Config {
+    class CLIUtilsImpl: public Config {
      public:
-      GFlagsConfig();
+      CLIUtilsImpl(int argc, char** argv);
 
       void load() override;
     };
+
   }
 }
 
-#endif  // IROHA_MAIN_CONFIG_IMPL_HPP_
+#endif //  IROHA_CONFIG_CLIUTILS_HPP_

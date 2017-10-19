@@ -42,13 +42,6 @@ RUN git clone https://github.com/CLIUtils/CLI11 /tmp/cliutils; \
     cp -r /tmp/cliutils/include/CLI /usr/local/include; \
     rm -rf /tmp/cliutils
 
-# install gflags
-RUN git clone https://github.com/gflags/gflags /tmp/gflags; \
-    (cd /tmp/gflags ; git checkout f8a0efe03aa69b3336d8e228b37d4ccb17324b88); \
-    cmake -H/tmp/gflags -B/tmp/gflags/build; \
-    cmake --build /tmp/gflags/build --target install -- -j${PARALLELISM}; \
-    rm -rf /tmp/gflags
-
 # install grpc
 RUN git clone https://github.com/c-ares/c-ares /tmp/c-ares; \
     (cd /tmp/c-ares ; git checkout 3be1924221e1326df520f8498d704a5c4c8d0cce); \
