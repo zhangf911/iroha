@@ -45,23 +45,6 @@ Application::~Application() {
   }
 }
 
-// void Application::init() {
-//  initProtoFactories();
-//  initPeerQuery();
-//  initCryptoProvider();
-//  initValidators();
-//  initOrderingGate();
-//  initSimulator();
-//  initBlockLoader();
-//  initConsensusGate();
-//  initSynchronizer();
-//  initPeerCommunicationService();
-//
-//  // Torii
-//  initTransactionCommandService();
-//  initQueryService();
-//}
-
 void Application::initStorage(const Postgres &pg,
                               const Redis &rd,
                               const BlockStorage &bs) {

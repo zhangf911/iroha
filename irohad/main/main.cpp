@@ -71,10 +71,8 @@ int main(int argc, char *argv[]) {
 
   /// OPTIONS
   auto start = main.add_subcommand("start"s, "Start peer"s);
-
-  auto ledger = main.add_subcommand("ledger"s, "Manage ledger"s);
-  ledger->require_subcommand(1);
-
+  auto ledger =
+      main.add_subcommand("ledger"s, "Manage ledger"s)->require_subcommand(1);
   auto lcreate = ledger->add_subcommand(
       "create"s, "Create new network with given genesis block"s);
   addCreateLedgerFlags(lcreate, [&argv, &log](std::string genesis) {
@@ -88,7 +86,7 @@ int main(int argc, char *argv[]) {
     log->info("{} ledger clear is called", argv[0]);
     BOOST_ASSERT_MSG(false, "not implemented");
   });
-std::move(config)
+
   addPeerFlags(start, torii, crypto);
   addPostgresFlags(start, postgres);
   addRedisFlags(start, redis);
@@ -118,23 +116,23 @@ std::move(config)
     // TODO(@warchant): refactor. Move this to Iroha as a separate
     // module
 
-//    {  // bad :(
-//      iroha::main::BlockInserter inserter(irohad.storage);
-//
-//      // throws if can not open file
-//      //      auto content =
-//      irohad.config().blockchainOptions().genesis_block;
-//      auto block = inserter.parseBlock(content);
-//      log->info("Block parsed");
-//
-//      if (block.has_value()) {
-//        inserter.applyToLedger({block.value()});
-//        log->info("Genesis block inserted, number of transactions: {} ",
-//                  block.value().transactions.size());
-//      } else {
-//        throw std::logic_error("Block can not be parsed from JSON");
-//      }
-//    }
+    //    {  // bad :(
+    //      iroha::main::BlockInserter inserter(irohad.storage);
+    //
+    //      // throws if can not open file
+    //      //      auto content =
+    //      irohad.config().blockchainOptions().genesis_block;
+    //      auto block = inserter.parseBlock(content);
+    //      log->info("Block parsed");
+    //
+    //      if (block.has_value()) {
+    //        inserter.applyToLedger({block.value()});
+    //        log->info("Genesis block inserted, number of transactions: {} ",
+    //                  block.value().transactions.size());
+    //      } else {
+    //        throw std::logic_error("Block can not be parsed from JSON");
+    //      }
+    //    }
 
     // runs iroha
     log->info("iroha initialized");
