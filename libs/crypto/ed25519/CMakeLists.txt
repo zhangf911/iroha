@@ -1,4 +1,4 @@
-add_library(ed25519
+add_library(ed25519 STATIC
     add_scalar.c
     fe.c
     ge.c
@@ -7,7 +7,6 @@ add_library(ed25519
     sc.c
     seed.c
     sha3.c
-    sha512.c
     sign.c
     verify.c
     )

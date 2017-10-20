@@ -16,6 +16,7 @@
 #
 
 add_subdirectory(ed25519)
+add_subdirectory(keys)
 
 add_library(hash
     hash.cpp
@@ -27,10 +28,10 @@ target_link_libraries(hash
     pb_model_converters
     )
 
-add_library(cryptography
+add_library(crypto
     ed25519_impl.cpp
     )
-target_link_libraries(cryptography
+target_link_libraries(crypto
     ed25519
     hash
     )
@@ -41,5 +42,5 @@ add_library(keys_manager
 
 target_link_libraries(keys_manager
     optional
-    cryptography
+    crypto
     )
