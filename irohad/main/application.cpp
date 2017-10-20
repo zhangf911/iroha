@@ -17,8 +17,8 @@
 
 #include "main/application.hpp"
 
-#include "main/config/common.hpp"
 #include <boost/assert.hpp>
+#include "main/config/common.hpp"
 
 using namespace iroha;
 using namespace iroha::ametsuchi;
@@ -31,11 +31,7 @@ using namespace iroha::torii;
 using namespace iroha::model::converters;
 using namespace iroha::consensus::yac;
 
-Application::Application()
-    : log_(logger::log("irohad")) {
-  log_->info("created");
-  initStorage();
-}
+Application::Application() : log_(logger::log("irohad")) {}
 
 Application::~Application() {
   if (internal_server) {
@@ -49,29 +45,27 @@ Application::~Application() {
   }
 }
 
-void Application::init(std::unique_ptr<Config> c) {
-  // TODO: pass configs as dependencies
+// void Application::init() {
+//  initProtoFactories();
+//  initPeerQuery();
+//  initCryptoProvider();
+//  initValidators();
+//  initOrderingGate();
+//  initSimulator();
+//  initBlockLoader();
+//  initConsensusGate();
+//  initSynchronizer();
+//  initPeerCommunicationService();
+//
+//  // Torii
+//  initTransactionCommandService();
+//  initQueryService();
+//}
 
-  initProtoFactories();
-  initPeerQuery();
-  initCryptoProvider();
-  initValidators();
-  initOrderingGate();
-  initSimulator();
-  initBlockLoader();
-  initConsensusGate();
-  initSynchronizer();
-  initPeerCommunicationService();
-
-  // Torii
-  initTransactionCommandService();
-  initQueryService();
-}
-
-void Application::initStorage() {
-  storage = StorageImpl::create(
-      config_->redis(), config_->postgres(), config_->blockStorage());
-
+void Application::initStorage(const Postgres &pg,
+                              const Redis &rd,
+                              const BlockStorage &bs) {
+  storage = StorageImpl::create(pg, rd, bs);
   BOOST_ASSERT(storage != nullptr);
 
   log_->info("[Init] => storage", logger::logBool(storage));
@@ -93,7 +87,10 @@ void Application::initPeerQuery() {
   log_->info("[Init] => peer query");
 }
 
-void Application::initCryptoProvider() {
+void Application::initCryptoProvider(const Cryptography &crypto) {
+  /// parse crypto
+
+  // TODO
   crypto_verifier = std::make_shared<ModelCryptoProviderImpl>(
       config_->cryptography().keypair());
 
@@ -109,13 +106,8 @@ void Application::initValidators() {
   log_->info("[Init] => validators");
 }
 
-void Application::initOrderingGate() {
-  // maximum transactions in proposal
-  const auto max_transactions_in_proposal = 10u;
-
-  // delay before emitting new proposal
-  const auto delay_for_new_proposal = 5000u;
-
+void Application::initOrderingGate(size_t max_transactions_in_proposal,
+                                   size_t delay_for_new_proposal) {
   ordering_gate = ordering_init.initOrderingGate(
       wsv, max_transactions_in_proposal, delay_for_new_proposal);
 
@@ -140,14 +132,16 @@ void Application::initBlockLoader() {
   log_->info("[Init] => block loader");
 }
 
-void Application::initConsensusGate() {
-  consensus_gate = yac_init.initConsensusGate(
-      config_->torii().listenAddress(),
-      wsv,
-      simulator,
-      block_loader,
-      /*TODO(@warchant): temp solution. Will be changed with Keypair object.*/
-      config_->cryptography().keypair());
+void Application::initConsensusGate(const Torii &torii) {
+  // TODO: pass base crypto provider, not keypair
+
+  consensus_gate =
+      yac_init.initConsensusGate(torii.listenAddress(),
+                                 wsv,
+                                 simulator,
+                                 block_loader,
+                                 /// fixme:
+                                 config_->cryptography().keypair());
 
   log_->info("[Init] => consensus gate");
 }
@@ -195,15 +189,13 @@ void Application::initQueryService() {
   log_->info("[Init] => query service");
 }
 
-void Application::run() {
-  torii_server =
-      std::make_unique<ServerRunner>(config_->torii().listenAddress());
+void Application::run(const Torii &torii) {
+  torii_server = std::make_unique<ServerRunner>(torii.listenAddress());
 
   grpc::ServerBuilder builder;
   int *port = 0;
-  builder.AddListeningPort(config_->torii().listenAddress(),
-                           grpc::InsecureServerCredentials(),
-                           port);
+  builder.AddListeningPort(
+      torii.listenAddress(), grpc::InsecureServerCredentials(), port);
   BOOST_ASSERT(port != nullptr);
 
   builder.RegisterService(ordering_init.ordering_gate_transport.get());
@@ -212,7 +204,7 @@ void Application::run() {
   builder.RegisterService(loader_init.service.get());
 
   internal_server = builder.BuildAndStart();
-  BOOST_ASSERT(port != 0);
+  BOOST_ASSERT(port != nullptr);
   server_thread = std::thread([this] {
     torii_server->run(std::move(command_service), std::move(query_service));
   });

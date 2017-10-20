@@ -15,6 +15,8 @@
  * limitations under the License.
  */
 
+#include <utility>
+
 #include "main/impl/consensus_init.hpp"
 
 #include "consensus/yac/impl/peer_orderer_impl.hpp"
@@ -71,7 +73,7 @@ namespace iroha {
           std::shared_ptr<simulator::BlockCreator> block_creator,
           std::shared_ptr<network::BlockLoader> block_loader,
           const keypair_t &keypair) {
-        auto peer_orderer = createPeerOrderer(wsv);
+        auto peer_orderer = createPeerOrderer(std::move(wsv));
 
         auto yac = createYac(std::move(network_address),
                              peer_orderer->getInitialOrdering().value(),

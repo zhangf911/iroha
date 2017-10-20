@@ -88,7 +88,7 @@ int main(int argc, char *argv[]) {
     log->info("{} ledger clear is called", argv[0]);
     BOOST_ASSERT_MSG(false, "not implemented");
   });
-
+std::move(config)
   addPeerFlags(start, torii, crypto);
   addPostgresFlags(start, postgres);
   addRedisFlags(start, redis);
@@ -101,36 +101,44 @@ int main(int argc, char *argv[]) {
     // descendants
     // from std::exception
     Application irohad;
+    irohad.initStorage(postgres, redis, storage);
+    irohad.initProtoFactories();
+    irohad.initPeerQuery();
+    irohad.initCryptoProvider(crypto);
+    irohad.initValidators();
+    irohad.initOrderingGate();
+    irohad.initSimulator();
+    irohad.initBlockLoader();
+    irohad.initConsensusGate(torii);
+    irohad.initSynchronizer();
+    irohad.initPeerCommunicationService();
+    irohad.initTransactionCommandService();
+    irohad.initQueryService();
 
     // TODO(@warchant): refactor. Move this to Iroha as a separate
     // module
 
-    {  // bad :(
-      iroha::main::BlockInserter inserter(irohad.storage);
-
-      // throws if can not open file
-      //      auto content =
-      irohad.config().blockchainOptions().genesis_block;
-      auto block = inserter.parseBlock(content);
-      log->info("Block parsed");
-
-      if (block.has_value()) {
-        inserter.applyToLedger({block.value()});
-        log->info("Genesis block inserted, number of transactions: {} ",
-                  block.value().transactions.size());
-      } else {
-        throw std::logic_error("Block can not be parsed from JSON");
-      }
-    }
-
-    // init pipeline components
-    log->info("start initialization");
-    
-    irohad.init();
+//    {  // bad :(
+//      iroha::main::BlockInserter inserter(irohad.storage);
+//
+//      // throws if can not open file
+//      //      auto content =
+//      irohad.config().blockchainOptions().genesis_block;
+//      auto block = inserter.parseBlock(content);
+//      log->info("Block parsed");
+//
+//      if (block.has_value()) {
+//        inserter.applyToLedger({block.value()});
+//        log->info("Genesis block inserted, number of transactions: {} ",
+//                  block.value().transactions.size());
+//      } else {
+//        throw std::logic_error("Block can not be parsed from JSON");
+//      }
+//    }
 
     // runs iroha
     log->info("iroha initialized");
-    irohad.run();
+    irohad.run(torii);
 
   } catch (const std::exception &e) {
     log->error("FATAL: {}", e.what());

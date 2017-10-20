@@ -46,47 +46,42 @@
 #include "validation/impl/chain_validator_impl.hpp"
 #include "validation/impl/stateful_validator_impl.hpp"
 
-using iroha::config::Config;
+#include "main/common.hpp"
+
+using namespace iroha::config;
 
 class Application {
  public:
-
   Application();
-
-  /**
-   * Initialization of whole objects in system
-   */
-  virtual void init(std::unique_ptr<Config>);
 
   /**
    * Run worker threads for start performing
    */
-  virtual void run();
+  virtual void run(const Torii &);
 
   virtual ~Application();
 
- protected:
-  const std::unique_ptr<Config> config_;
-
   // ------| component initialization |-------
 
-  virtual void initStorage();
+  virtual void initStorage(const Postgres &,
+                           const Redis &,
+                           const BlockStorage &);
 
   virtual void initProtoFactories();
 
   virtual void initPeerQuery();
 
-  virtual void initCryptoProvider();
+  virtual void initCryptoProvider(const Cryptography &);
 
   virtual void initValidators();
 
-  virtual void initOrderingGate();
+  virtual void initOrderingGate(size_t max = 10u, size_t delay_ms = 5000u);
 
   virtual void initSimulator();
 
   virtual void initBlockLoader();
 
-  virtual void initConsensusGate();
+  virtual void initConsensusGate(const Torii &);
 
   virtual void initSynchronizer();
 
@@ -96,6 +91,7 @@ class Application {
 
   virtual void initQueryService();
 
+ protected:
   // ------| internal dependencies  |-------
 
   // converter factories
