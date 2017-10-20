@@ -34,7 +34,7 @@ int main(int argc, char *argv[]) {
   CLI::App main("iroha - simple decentralized ledger");
   main.require_subcommand(1);
   main.add_flag("-v,--version"s,
-                [&argv](size_t) {
+                [&argv, &main](size_t) {
                   // note (@warchant): do not use logger here, it
                   // looks ugly.
                   std::cout << argv[0] << " version " <<
@@ -44,6 +44,7 @@ int main(int argc, char *argv[]) {
                       "undefined"
 #endif
                             << std::endl;
+                  exit(0);
                 },
                 "Current version"s);
 
@@ -69,18 +70,30 @@ int main(int argc, char *argv[]) {
 
   /// OPTIONS
   auto start = main.add_subcommand("start"s, "Start peer"s);
+  start->add_config();
 
   auto ledger = main.add_subcommand("ledger"s, "Manage ledger"s);
   ledger->require_subcommand(1);
 
   auto lcreate = ledger->add_subcommand(
       "create"s, "Create new network with given genesis block"s);
-  lcreate->add_option("genesis-block", genesis, "Path to the genesis block"s)
+  lcreate
+      ->add_option("genesis-block",
+                   genesis,
+                   "Path to the genesis block"s)
       ->required()
-      ->group("Mandatory"s)
       ->check(CLI::ExistingFile);
+  lcreate->set_callback([&argv, &log, &genesis]() {
+    log->info("{} ledger create {} is called", argv[0], genesis);
+    BOOST_ASSERT_MSG(false, "not implemented");
+  });
 
   auto lclear = ledger->add_subcommand("clear"s, "Clear peer's ledger"s);
+  lclear->set_callback([&log, &argv]() {
+    // TODO (@warchant) 20/10/17: implement
+    log->info("{} ledger clear is called", argv[0]);
+    BOOST_ASSERT_MSG(false, "not implemented");
+  });
 
   addPeerFlags(start, torii, crypto);
   addPostgresFlags(start, postgres);
