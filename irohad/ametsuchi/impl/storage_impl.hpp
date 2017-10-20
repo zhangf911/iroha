@@ -19,7 +19,7 @@
 #define IROHA_STORAGE_IMPL_HPP
 
 #include "ametsuchi/storage.hpp"
-#include "main/config/config.hpp"
+#include "main/config/common.hpp"
 
 #include <cmath>
 #include <shared_mutex>

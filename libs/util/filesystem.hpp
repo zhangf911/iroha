@@ -25,61 +25,57 @@
 
 namespace iroha {
   namespace filesystem {
-    namespace validation {
 
-      /**
-       * Possible validators:
-       *  given path:
-       *    - folder exists
-       *    - is file
-       *    - is folder
-       *    - is symlink
-       *    - etc
-       *  TODO(@warchant) implement them as separate functions here.
-       */
+    /**
+     * Possible validators:
+     *  given path:
+     *    - folder exists
+     *    - is file
+     *    - is folder
+     *    - is symlink
+     *    - etc
+     *  TODO(@warchant) implement them as separate functions here.
+     */
 
-      /**
-       * @brief Returns true if file exists by given path, false otherwise.
-       * @param path
-       * @return
-       */
-      inline bool is_existing_file(const std::string &path) {
-        if (path.empty()) return false;
+    /**
+     * @brief Returns true if file exists by given path, false otherwise.
+     * @param path
+     * @return
+     */
+    inline bool is_existing_file(const std::string &path) {
+      if (path.empty()) return false;
 
-        // will be autoclosed
-        std::ifstream f(path);
-        return f.is_open();
-      }
-    }  // namespace validation
+      // will be autoclosed
+      std::ifstream f(path);
+      return f.is_open();
+    }
 
-    namespace util {
-      /**
-       * Open file and read its contents in std::string.
-       * @throws std::ios_base::failure if files does not exist.
-       * @param path
-       * @return
-       */
-      inline std::string read_file(const std::string &path) {
-        // we think that check is performed in caller.
-        BOOST_ASSERT(!path.empty());
+    /**
+     * Open file and read its contents in std::string.
+     * @throws std::ios_base::failure if files does not exist.
+     * @param path
+     * @return
+     */
+    inline std::string read_file(const std::string &path) {
+      // we think that check is performed in caller.
+      BOOST_ASSERT(!path.empty());
 
-        std::ifstream f;
+      std::ifstream f;
 
-        // throw exception if open failed
-        f.exceptions(f.exceptions() | std::ifstream::failbit
-                     | std::ifstream::badbit);
+      // throw exception if open failed
+      f.exceptions(f.exceptions() | std::ifstream::failbit
+                   | std::ifstream::badbit);
 
-        // open throws std::ios_base::failure, which is std::system_error (has
-        // const
-        // char* what() method with the reason)
-        f.open(path);
+      // open throws std::ios_base::failure, which is std::system_error (has
+      // const
+      // char* what() method with the reason)
+      f.open(path);
 
-        std::stringstream buffer;
-        buffer << f.rdbuf();
-        f.close();
+      std::stringstream buffer;
+      buffer << f.rdbuf();
+      f.close();
 
-        return buffer.str();
-      }
+      return buffer.str();
     }
   }  // namespace filesystem
 }  // namespace iroha

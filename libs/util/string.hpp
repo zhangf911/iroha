@@ -20,41 +20,37 @@
 
 #include <algorithm>
 #include <boost/assert.hpp>
-#include <string>
 #include <sstream>
+#include <string>
 
 namespace iroha {
   namespace string {
-    namespace validation {
 
-      /// @returns true if all chars in string are printable
-      inline bool is_printable(const std::string &s) {
-        return std::all_of(s.begin(), s.end(),
-                           [](const auto c) { return std::isprint(c); });
-      }
-    }  // namespace validation
+    /// @returns true if all chars in string are printable
+    inline bool is_printable(const std::string &s) {
+      return std::all_of(
+          s.begin(), s.end(), [](const auto c) { return std::isprint(c); });
+    }
 
-    namespace util {
-      /**
-       * Parse arbitrary typeT: string, int, long, double... from
-       * string-encoded format to T.
-       * @tparam T
-       * @throws std::exception if string can not be parsed.
-       * @param s any string
-       * @return
-       */
-      template <typename T>
-      T from_string(const std::string &s) {
-        // we think that check is performed in caller.
-        BOOST_ASSERT(!s.empty());
+    /**
+     * Parse arbitrary typeT: string, int, long, double... from
+     * string-encoded format to T.
+     * @tparam T
+     * @throws std::exception if string can not be parsed.
+     * @param s any string
+     * @return
+     */
+    template <typename T>
+    T from_string(const std::string &s) {
+      // we think that check is performed in caller.
+      BOOST_ASSERT(!s.empty());
 
-        std::stringstream ss(s);
-        T result;
-        ss >> result;
+      std::stringstream ss(s);
+      T result;
+      ss >> result;
 
-        return result;
-      }
-    }  // namespace string
-  }    // namespace util
+      return result;
+    }
+  }  // namespace string
 }  // namespace iroha
 #endif  // IROHA_UTIL_STRING_HPP_

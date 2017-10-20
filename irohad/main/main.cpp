@@ -14,88 +14,121 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-#include "util/filesystem.hpp"
-
-#include "config/cliutils/config.hpp"
-#include "main/raw_block_insertion.hpp"
-#include "main/application.hpp"
+#include "main/flags.hpp"
+//#include "main/application.hpp"
+#include "main/common.hpp"
+//#include "main/raw_block_insertion.hpp"
+#include "util/network.hpp"
 
 #include "logger/logger.hpp"
 
-using iroha::config::Config;
-using iroha::config::CLIUtilsImpl;
-using Iroha = Application;
-using iroha::filesystem::util::read_file;
+using namespace iroha;
+
+#define STRINGIFY2(X) #X
+#define STRINGIFY(X) STRINGIFY2(X)
+#define ALLHOST "0.0.0.0"s
+#define LOCALHOST "localhost"s
 
 int main(int argc, char *argv[]) {
   auto log = logger::log("MAIN");
-
-  try {
-#ifndef IROHA_VERSION
-#define IROHA_VERSION "v0.95"
-#endif
-
+  CLI::App main("iroha - simple decentralized ledger");
+  main.require_subcommand(1);
+  main.add_flag("-v,--version"s,
+                [&argv](size_t) {
+                  // note (@warchant): do not use logger here, it
+                  // looks ugly.
+                  std::cout << argv[0] << " version " <<
 #ifdef IROHA_VERSION
-// preprocessor trick, which helps to stringify arbitrary value
-#define STRINGIFY2(X) #X
-#define STRINGIFY(X) STRINGIFY2(X)
-    STRINGIFY(IROHA_VERSION);
+                      STRINGIFY(IROHA_VERSION)
+#else
+                      "undefined"
 #endif
-    std::stringstream ss;
-    ss << "\n"
-       << "\n"
-       << "USING ENVIRONMENT VARIABLES: \n"
-       << "\t$ export FLAGS_flag1=val\n"
-       << "\t$ export FLAGS_flag2=val\n"
-       << "\t$ " << argv[0] << " -fromenv=flag1,flag2\n"
-       << "\n"
-       << "USING CLI: \n"
-       << "\t$ " << argv[0] << " -flag1=val -flag2=val\n"
-       << "\n"
-       << "USING FLAG FILE: \n"
-       << "\t$ cat /tmp/flags\n"
-       << "\t-flag1=val\n"
-       << "\t-flag2=val\n"
-       << "\t$ " << argv[0] << " -flagfile=/tmp/flags\n";
+                            << std::endl;
+                },
+                "Current version"s);
 
+  /// DEFAULTS
+  config::Torii torii;
+  torii.host = ALLHOST;
+  torii.port = 50051;
 
+  config::Redis redis;
+  redis.host = LOCALHOST;
+  redis.port = 6379;
 
-    // if something critical can not be parsed, throws exceptions descendants
-    // from std::exception
-    Iroha irohad;
+  config::Postgres postgres;
+  postgres.host = LOCALHOST;
+  postgres.port = 5432;
+  postgres.database = "iroha";
 
-    // TODO(@warchant): refactor. Move this to Iroha as a separate
-    // module
+  config::BlockStorage storage;
+  storage.path = "blocks"s;
 
-    {  // bad :(
-      iroha::main::BlockInserter inserter(irohad.storage);
+  std::string genesis{};  // path to the genesis block
+  config::Cryptography crypto;
 
-      // throws if can not open file
-      auto content = irohad.config().blockchainOptions().genesis_block;
-      auto block = inserter.parseBlock(content);
-      log->info("Block parsed");
+  /// OPTIONS
+  auto start = main.add_subcommand("start"s, "Start peer"s);
 
-      if (block.has_value()) {
-        inserter.applyToLedger({block.value()});
-        log->info("Genesis block inserted, number of transactions: {}",
-                  block.value().transactions.size());
-      } else {
-        throw std::logic_error("Block can not be parsed from JSON");
-      }
-    }
+  auto ledger = main.add_subcommand("ledger"s, "Manage ledger"s);
+  ledger->require_subcommand(1);
 
-    // init pipeline components
-    log->info("start initialization");
+  auto lcreate = ledger->add_subcommand(
+      "create"s, "Create new network with given genesis block"s);
+  lcreate->add_option("genesis-block", genesis, "Path to the genesis block"s)
+      ->required()
+      ->group("Mandatory"s)
+      ->check(CLI::ExistingFile);
 
-    std::unique_ptr<Config> config = std::make_unique<CLIUtilsImpl>(argc, argv);
-    irohad.init(std::move(config));
+  auto lclear = ledger->add_subcommand("clear"s, "Clear peer's ledger"s);
 
-    // runs iroha
-    log->info("iroha initialized");
-    irohad.run();
+  addPeerFlags(start, torii, crypto);
+  addPostgresFlags(start, postgres);
+  addRedisFlags(start, redis);
 
-  } catch (const std::exception &e) {
-    log->error("FATAL: {}", e.what());
-  }
+  CLI11_PARSE(main, argc, argv);
+  //
+  //  try {
+  //    //    // if something critical can not be parsed, throws exceptions
+  //    //    // descendants
+  //    //    // from std::exception
+  //    //    Application irohad;
+  //    //
+  //    //    // TODO(@warchant): refactor. Move this to Iroha as a separate
+  //    //    // module
+  //    //
+  //    //    //    {  // bad :(
+  //    //    //      iroha::main::BlockInserter inserter(irohad.storage);
+  //    //    //
+  //    //    //      // throws if can not open file
+  //    //    //      //      auto content =
+  //    //    //      irohad.config().blockchainOptions().genesis_block;
+  //    //    //      auto block = inserter.parseBlock(content);
+  //    //    //      log->info("Block parsed");
+  //    //    //
+  //    //    //      if (block.has_value()) {
+  //    //    //        inserter.applyToLedger({block.value()});
+  //    //    //        log->info("Genesis block inserted, number of
+  //    transactions:
+  //    //    {}",
+  //    //    //                  block.value().transactions.size());
+  //    //    //      } else {
+  //    //    //        throw std::logic_error("Block can not be parsed from
+  //    JSON");
+  //    //    //      }
+  //    //    //    }
+  //    //
+  //    //    // init pipeline components
+  //    //    log->info("start initialization");
+  //    //
+  //    //    irohad.init(std::move(config));
+  //    //
+  //    //    // runs iroha
+  //    //    log->info("iroha initialized");
+  //    //    irohad.run();
+  //  } catch (const std::exception &e) {
+  //    log->error("FATAL: {}", e.what());
+  //  }
+
   return 0;
 }

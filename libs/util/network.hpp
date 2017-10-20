@@ -23,30 +23,28 @@
 #include "string.hpp"
 
 namespace iroha {
-    namespace network {
-      namespace validation {
+  namespace network {
 
-      /**
-       * @tparam T integer type
-       * @return true if 2^16 > port > 0, false otherwise.
-       */
-      template<typename T>
-      constexpr inline bool is_port_valid(T port) {
-        return std::numeric_limits<T>::is_integer && port > 0
-            && port < 65535 /* 1 << 16 - 1 */;
-      }
+    /**
+     * @tparam T integer type
+     * @return true if 2^16 > port > 0, false otherwise.
+     */
+    template<typename T>
+    constexpr inline bool is_port_valid(T port) {
+      return std::numeric_limits<T>::is_integer && port > 0
+          && port < 65535 /* 1 << 16 - 1 */;
+    }
 
-      /**
-       * It is not possible to determine all possible types of hostnames, since
-       * they may be localized (domain .рф in Russia is example).
-       *
-       * @return true if given string looks like a domain name or ip.
-       */
-      inline bool is_host_valid(const std::string &host) {
-        return !host.empty() && string::validation::is_printable(host);
-      }
+    /**
+     * It is not possible to determine all possible types of hostnames, since
+     * they may be localized (domain .рф in Russia is example).
+     *
+     * @return true if given string looks like a domain name or ip.
+     */
+    inline bool is_host_valid(const std::string &host) {
+      return !host.empty() && string::is_printable(host);
+    }
 
-    } // namespace validation
   } // namespace network
 } // namespace iroha
 

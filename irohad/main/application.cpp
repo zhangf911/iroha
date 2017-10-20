@@ -17,7 +17,7 @@
 
 #include "main/application.hpp"
 
-#include "config/config.hpp"
+#include "main/config/common.hpp"
 #include <boost/assert.hpp>
 
 using namespace iroha;

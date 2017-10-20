@@ -20,7 +20,7 @@
 #include "crypto/keys_manager_impl.hpp"
 #include "datetime/time.hpp"
 #include "framework/test_subscriber.hpp"
-#include "main/config/config.hpp"
+#include "main/config/common.hpp"
 #include "main/raw_block_insertion.hpp"
 #include "main/application.hpp"
 #include "model/generators/block_generator.hpp"

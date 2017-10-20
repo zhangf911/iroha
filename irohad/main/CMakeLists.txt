@@ -57,10 +57,12 @@ target_link_libraries(application
 
 add_executable(irohad main.cpp)
 target_link_libraries(irohad
-    application
-    raw_block_insertion
-    rapidjson
-    irohad-config
+    pthread
+    logger
+    cliutils
+#    application
+#    raw_block_insertion
+#    rapidjson
     )
 
 add_install_step_for_bin(irohad)
