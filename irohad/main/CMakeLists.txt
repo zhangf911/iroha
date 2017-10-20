@@ -60,6 +60,7 @@ target_link_libraries(irohad
     pthread
     logger
     cliutils
+    ${Boost_LIBRARIES}
 #    application
 #    raw_block_insertion
 #    rapidjson

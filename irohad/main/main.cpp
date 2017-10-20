@@ -14,10 +14,12 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-#include "main/flags.hpp"
-//#include "main/application.hpp"
+#include <boost/filesystem.hpp>
+
+#include "main/application.hpp"
 #include "main/common.hpp"
-//#include "main/raw_block_insertion.hpp"
+#include "main/flags.hpp"
+#include "main/raw_block_insertion.hpp"
 #include "util/network.hpp"
 
 #include "logger/logger.hpp"
@@ -49,41 +51,33 @@ int main(int argc, char *argv[]) {
                 "Current version"s);
 
   /// DEFAULTS
-  config::Torii torii;
+  config::Torii torii{};
   torii.host = ALLHOST;
   torii.port = 50051;
 
-  config::Redis redis;
+  config::Redis redis{};
   redis.host = LOCALHOST;
   redis.port = 6379;
 
-  config::Postgres postgres;
+  config::Postgres postgres{};
   postgres.host = LOCALHOST;
   postgres.port = 5432;
   postgres.database = "iroha";
 
-  config::BlockStorage storage;
+  config::BlockStorage storage{};
   storage.path = "blocks"s;
 
-  std::string genesis{};  // path to the genesis block
-  config::Cryptography crypto;
+  config::Cryptography crypto{};
 
   /// OPTIONS
   auto start = main.add_subcommand("start"s, "Start peer"s);
-  start->add_config();
 
   auto ledger = main.add_subcommand("ledger"s, "Manage ledger"s);
   ledger->require_subcommand(1);
 
   auto lcreate = ledger->add_subcommand(
       "create"s, "Create new network with given genesis block"s);
-  lcreate
-      ->add_option("genesis-block",
-                   genesis,
-                   "Path to the genesis block"s)
-      ->required()
-      ->check(CLI::ExistingFile);
-  lcreate->set_callback([&argv, &log, &genesis]() {
+  addCreateLedgerFlags(lcreate, [&argv, &log](std::string genesis) {
     log->info("{} ledger create {} is called", argv[0], genesis);
     BOOST_ASSERT_MSG(false, "not implemented");
   });
@@ -98,50 +92,49 @@ int main(int argc, char *argv[]) {
   addPeerFlags(start, torii, crypto);
   addPostgresFlags(start, postgres);
   addRedisFlags(start, redis);
+  addBlockStorageFlags(start, storage);
 
   CLI11_PARSE(main, argc, argv);
-  //
-  //  try {
-  //    //    // if something critical can not be parsed, throws exceptions
-  //    //    // descendants
-  //    //    // from std::exception
-  //    //    Application irohad;
-  //    //
-  //    //    // TODO(@warchant): refactor. Move this to Iroha as a separate
-  //    //    // module
-  //    //
-  //    //    //    {  // bad :(
-  //    //    //      iroha::main::BlockInserter inserter(irohad.storage);
-  //    //    //
-  //    //    //      // throws if can not open file
-  //    //    //      //      auto content =
-  //    //    //      irohad.config().blockchainOptions().genesis_block;
-  //    //    //      auto block = inserter.parseBlock(content);
-  //    //    //      log->info("Block parsed");
-  //    //    //
-  //    //    //      if (block.has_value()) {
-  //    //    //        inserter.applyToLedger({block.value()});
-  //    //    //        log->info("Genesis block inserted, number of
-  //    transactions:
-  //    //    {}",
-  //    //    //                  block.value().transactions.size());
-  //    //    //      } else {
-  //    //    //        throw std::logic_error("Block can not be parsed from
-  //    JSON");
-  //    //    //      }
-  //    //    //    }
-  //    //
-  //    //    // init pipeline components
-  //    //    log->info("start initialization");
-  //    //
-  //    //    irohad.init(std::move(config));
-  //    //
-  //    //    // runs iroha
-  //    //    log->info("iroha initialized");
-  //    //    irohad.run();
-  //  } catch (const std::exception &e) {
-  //    log->error("FATAL: {}", e.what());
-  //  }
+
+  try {
+    // if something critical can not be parsed, throws exceptions
+    // descendants
+    // from std::exception
+    Application irohad;
+
+    // TODO(@warchant): refactor. Move this to Iroha as a separate
+    // module
+
+    {  // bad :(
+      iroha::main::BlockInserter inserter(irohad.storage);
+
+      // throws if can not open file
+      //      auto content =
+      irohad.config().blockchainOptions().genesis_block;
+      auto block = inserter.parseBlock(content);
+      log->info("Block parsed");
+
+      if (block.has_value()) {
+        inserter.applyToLedger({block.value()});
+        log->info("Genesis block inserted, number of transactions: {} ",
+                  block.value().transactions.size());
+      } else {
+        throw std::logic_error("Block can not be parsed from JSON");
+      }
+    }
+
+    // init pipeline components
+    log->info("start initialization");
+    
+    irohad.init();
+
+    // runs iroha
+    log->info("iroha initialized");
+    irohad.run();
+
+  } catch (const std::exception &e) {
+    log->error("FATAL: {}", e.what());
+  }
 
   return 0;
 }

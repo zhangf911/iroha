@@ -15,22 +15,26 @@
  * limitations under the License.
  */
 
-#ifndef IROHA_FILESYSTEM_HPP_
-#define IROHA_FILESYSTEM_HPP_
-
+#include "util/filesystem.hpp"
+#include <boost/assert.hpp>
 #include <boost/optional.hpp>
-#include <string>
+#include <fstream>
+#include <sstream>
 
 namespace iroha {
   namespace filesystem {
-    /**
-     * Open file and read its contents in std::string.
-     * @throws std::ios_base::failure if files does not exist.
-     * @param path
-     * @return
-     */
-    boost::optional<std::string> read_file(const std::string &path);
-  }  // namespace filesystem
-}  // namespace iroha
 
-#endif  //  IROHA_FILESYSTEM_HPP_
+    boost::optional<std::string> read_file(const std::string &path) {
+      try {
+        std::ifstream f(path);
+        std::stringstream buffer;
+        buffer << f.rdbuf();
+        f.close();
+
+        return buffer.str();
+      } catch (std::exception const &e) {
+        return {};
+      }
+    }
+  }
+}

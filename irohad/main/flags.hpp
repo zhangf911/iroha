@@ -95,4 +95,25 @@ inline void addRedisFlags(CLI::App *p, iroha::config::Redis &redis) {
       ->group("Redis"s);
 }
 
+inline void addBlockStorageFlags(CLI::App *p,
+                                 iroha::config::BlockStorage &storage) {
+  p->add_option("--blockspath"s,
+                storage.path,
+                "Path to the folder, where blocks are saved",
+                true)
+      ->required()
+      ->check(CLI::ExistingDirectory)
+      ->envname("IROHA_BLOCKSPATH")
+      ->group("Block Storage");
+}
+
+inline void addCreateLedgerFlags(CLI::App *p,
+                                 std::function<void(std::string)> callback) {
+  std::string genesis{};
+  p->add_option("genesis-block", genesis, "Path to the genesis block"s)
+      ->required()
+      ->check(CLI::ExistingFile);
+  p->set_callback([&genesis, &callback]() { callback(genesis); });
+}
+
 #endif  //  IROHA_FLAGS_HPP_
