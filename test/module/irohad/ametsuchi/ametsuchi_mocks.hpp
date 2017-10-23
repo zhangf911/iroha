@@ -104,16 +104,17 @@ namespace iroha {
 
     class MockBlockQuery : public BlockQuery {
      public:
-      MOCK_METHOD1(
+      MOCK_METHOD2(
           getAccountTransactions,
-          rxcpp::observable<model::Transaction>(const std::string &account_id));
+          rxcpp::observable<model::Transaction>(const std::string &account_id, const model::Pager));
       MOCK_METHOD1(
           getTxByHashSync,
           boost::optional<model::Transaction>(const std::string &hash));
-      MOCK_METHOD2(
+      MOCK_METHOD3(
           getAccountAssetTransactions,
           rxcpp::observable<model::Transaction>(const std::string &account_id,
-                                                const std::string &asset_id));
+                                                const std::vector<std::string> &asset_id,
+                                                const model::Pager& pager));
       MOCK_METHOD2(getBlocks,
                    rxcpp::observable<model::Block>(uint32_t, uint32_t));
       MOCK_METHOD1(getBlocksFrom, rxcpp::observable<model::Block>(uint32_t));
