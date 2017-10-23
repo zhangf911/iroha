@@ -152,6 +152,5 @@ namespace iroha {
           .subscribe([&](auto tx) { reverser.push_front(tx); });
       return rxcpp::observable<>::iterate(reverser);
     }
-
   }  // namespace ametsuchi
 }  // namespace iroha
