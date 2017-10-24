@@ -32,3 +32,9 @@ AddTest(signature_test signature_test.cpp)
 target_link_libraries(signature_test
     cryptography
     )
+
+
+AddTest(ed25519_test ed25519_test.cpp)
+target_link_libraries(ed25519_test
+    irohad-ed25519-signer
+)

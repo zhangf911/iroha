@@ -15,9 +15,13 @@
 # limitations under the License.
 #
 
-add_subdirectory(ed25519)
 add_subdirectory(keys)
 
+# algorithm-specific types
+add_subdirectory(ed25519)
+
+
+# library
 add_library(hash
     hash.cpp
     )

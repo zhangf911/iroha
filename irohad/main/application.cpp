@@ -71,9 +71,13 @@ void Application::initPeerQuery() {
 }
 
 void Application::initCryptoProvider(const Cryptography &crypto) {
-  /// parse crypto
+  /// parse keypair
 
-  // TODO
+  // TODO: temporal solution
+  auto parseKeypair = [](const Cryptography &c){
+
+  };
+
   crypto_verifier = std::make_shared<ModelCryptoProviderImpl>(
       config_->cryptography().keypair());
 

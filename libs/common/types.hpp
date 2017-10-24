@@ -23,11 +23,12 @@
 #include <iomanip>
 #include <sstream>
 #include <string>
-#include <typeinfo>
 #include <type_traits>
+#include <typeinfo>
 #include <vector>
 
 #include <nonstd/optional.hpp>
+#include <boost/optional.hpp>
 
 /**
  * This file defines common types used in iroha.
@@ -59,26 +60,12 @@ namespace iroha {
                                    'e',
                                    'f'};
 
-  /**
-   * Base type which represents blob of fixed size.
-   *
-   * std::string is convenient to use but it is not safe.
-   * We can not specify the fixed length for string.
-   *
-   * For std::array it is possible, so we prefer it over std::string.
-   */
-  template <size_t size_>
-  class blob_t : public std::array<byte_t, size_> {
+  template <typename T>
+  class BaseBlob : public T {
    public:
-    /**
-     * Initialize blob value
-     */
-    blob_t() { this->fill(0); }
-
-    /**
-     * In compile-time returns size of current blob.
-     */
-    constexpr static size_t size() { return size_; }
+    /// use T's constructors
+    using T::T;
+    using Type = T;
 
     /**
      * Converts current blob to std::string
@@ -91,13 +78,14 @@ namespace iroha {
      * Converts current blob to base64, represented as std::string
      */
     std::string to_base64() const noexcept {
-      return base64_encode(this->data(), size_);
+      return base64_encode(this->data(), this->size());
     }
 
     /**
      * Converts current blob to hex string.
      */
     std::string to_hexstring() const noexcept {
+      size_t size_ = this->size();
       std::string res(size_ * 2, 0);
       auto ptr = this->data();
       for (uint32_t i = 0, k = 0; i < size_; i++) {
@@ -108,6 +96,30 @@ namespace iroha {
       }
       return res;
     }
+
+    virtual ~BaseBlob() {}
+  };
+
+  /**
+   * Base type which represents blob of fixed size.
+   *
+   * std::string is convenient to use but it is not safe.
+   * We can not specify the fixed length for string.
+   *
+   * For std::array it is possible, so we prefer it over std::string.
+   */
+  template <size_t size_>
+  class blob_t : public BaseBlob<std::array<byte_t, size_>> {
+   public:
+    /**
+     * Initialize blob value
+     */
+    blob_t() { this->fill(0); }
+
+    /**
+     * In compile-time returns size of current blob.
+     */
+    constexpr static size_t size() { return size_; }
 
     static blob_t<size_> from_string(const std::string &data) {
       if (data.size() != size_) {
@@ -225,9 +237,8 @@ namespace iroha {
    * @return monadic value, which can be of another type
    */
   template <typename T, typename Transform>
-  auto operator|(T t, Transform f) ->
-      typename std::enable_if<std::is_same<decltype(f(*t)),
-                                           void>::value>::type {
+  auto operator|(T t, Transform f) -> typename std::
+      enable_if<std::is_same<decltype(f(*t)), void>::value>::type {
     if (t) {
       f(*t);
     }

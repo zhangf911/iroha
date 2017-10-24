@@ -1,13 +1,5 @@
-add_library(ed25519 STATIC
-    add_scalar.c
-    fe.c
-    ge.c
-    key_exchange.c
-    keypair.c
-    sc.c
-    seed.c
-    sha3.c
-    sign.c
-    verify.c
+add_subdirectory(c_ed25519)
+
+add_library(libs-crypto-ed25519
+    ed25519.cpp
     )
-target_include_directories(ed25519 INTERFACE .)

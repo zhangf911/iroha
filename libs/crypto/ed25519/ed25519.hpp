@@ -15,34 +15,30 @@
  * limitations under the License.
  */
 
-#ifndef IROHA_KEYPAIR_HPP_
-#define IROHA_KEYPAIR_HPP_
+#ifndef IROHA_CRYPTO_ED25519_INTERFACE_HPP_
+#define IROHA_CRYPTO_ED25519_INTERFACE_HPP_
 
-#include <crypto/crypto.hpp>
-#include "private_key.hpp"
-#include "public_key.hpp"
+#include <string>
+#include "crypto/ed25519/keypair.hpp"
 
 namespace iroha {
   namespace crypto {
+    namespace ed25519 {
 
-    /**
-     * @class Keypair
-     * @brief Represents a keypair of given type.
-     */
-    class Keypair {
-     public:
-      Keypair() = delete;
-      Keypair(Keypair const&) = delete;
-      Keypair(Keypair&&) noexcept = default;
-      Keypair& operator=(Keypair const&) = delete;
-      Keypair& operator=(Keypair&&) noexcept = default;
+      using message_t = std::string;
+      using seed_t = std::array<uint8_t, 32>;
 
-     private:
-      PrivateKey priv;
-      PublicKey pub;
-    };
+      Signature sign(const message_t &, const Keypair &kp);
 
-  }  // namespace crypto
-}  // namespace iroha
+      bool verify(const message_t &, const PublicKey &, const Signature &);
 
-#endif  //  IROHA_KEYPAIR_HPP_
+      seed_t generate_seed();
+      seed_t generate_seed(const std::string& passphrase);
+
+      Keypair generate_keypair();
+      Keypair generate_keypair(const seed_t&);
+    }
+  }
+}
+
+#endif  //  IROHA_CRYPTO_ED25519_INTERFACE_HPP_

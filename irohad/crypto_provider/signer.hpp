@@ -15,4 +15,28 @@
  * limitations under the License.
  */
 
-#include "keypair.hpp"
+#ifndef IROHA_BASE_SIGNER_HPP_
+#define IROHA_BASE_SIGNER_HPP_
+
+#include <string>
+
+namespace iroha {
+  namespace crypto {
+
+    /**
+     * CRTP
+     * @tparam ConcreteSigner
+     */
+    template <typename ConcreteSigner>
+    class Signer {
+     public:
+      using message_t = std::string;
+
+      auto sign(const message_t &m) const noexcept {
+        return static_cast<ConcreteSigner *>(this)->sign(m);
+      }
+    };
+  }
+}
+
+#endif  //  IROHA_BASE_SIGNER_HPP_
