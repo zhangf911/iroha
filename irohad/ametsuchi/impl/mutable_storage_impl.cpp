@@ -16,7 +16,9 @@
  */
 
 #include "ametsuchi/impl/mutable_storage_impl.hpp"
-#include <model/commands/transfer_asset.hpp>
+#include "crypto/hash.hpp"
+#include "model/commands/transfer_asset.hpp"
+#include "model/commands/add_asset_quantity.hpp"
 
 #include "ametsuchi/impl/postgres_wsv_command.hpp"
 #include "ametsuchi/impl/postgres_wsv_query.hpp"
@@ -41,46 +43,70 @@ namespace iroha {
       transaction_->exec("BEGIN;");
     }
 
-    void MutableStorageImpl::index_block(uint64_t height, model::Block block) {
-      for (size_t i = 0; i < block.transactions.size(); i++) {
-        auto tx = block.transactions.at(i);
-        auto account_id = tx.creator_account_id;
+    void MutableStorageImpl::index_block(uint64_t height, const model::Block& block) {
+      for (size_t tx_index = 0; tx_index < block.transactions.size(); tx_index++) {
+        const auto& tx = block.transactions.at(tx_index);
 
-        // to make index account_id -> list of blocks where his txs exist
-        index_->rpush(account_id, {std::to_string(height)});
+        // for GetAccountTransactions()
+        {
+          // to make index creator_account_id -> list of blocks where his txs exist
+          index_->rpush(tx.creator_account_id, {std::to_string(height)});
 
-        // to make index account_id:height -> list of tx indexes (where
-        // tx is placed in the block)
-        index_->rpush(account_id + ":" + std::to_string(height),
-                      {std::to_string(i)});
-
-        // collect all assets belonging to user "account_id"
-        std::set<std::string> users_assets_in_tx;
-        std::for_each(tx.commands.begin(),
-                      tx.commands.end(),
-                      [&account_id, &users_assets_in_tx](auto command) {
-                        if (instanceof <model::TransferAsset>(*command)) {
-                          auto transferAsset =
-                              (model::TransferAsset *)command.get();
-                          if (transferAsset->dest_account_id == account_id
-                              or transferAsset->src_account_id == account_id) {
-                            users_assets_in_tx.insert(transferAsset->asset_id);
-                          }
-                        }
-                      });
-
-        // to make account_id:height:asset_id -> list of tx indexes (where tx
-        // with certain asset is placed in the block )
-        for (const auto &asset_id : users_assets_in_tx) {
-          // create key to put user's txs with given asset_id
-          std::string account_assets_key;
-          account_assets_key.append(account_id);
-          account_assets_key.append(":");
-          account_assets_key.append(std::to_string(height));
-          account_assets_key.append(":");
-          account_assets_key.append(asset_id);
-          index_->rpush(account_assets_key, {std::to_string(i)});
+          // to make index creator_account_id:height -> list of tx indexes (where
+          // tx is placed in the block)
+          index_->rpush(tx.creator_account_id + ":" + std::to_string(height),
+                        {std::to_string(tx_index)});
         }
+
+        // for GetAccountAssetTransactions()
+        {
+          // collect all assets related to user account_id
+          std::set<std::pair<std::string, std::string>> users_acct_assets_in_tx;
+          std::for_each(tx.commands.begin(),
+                        tx.commands.end(),
+                        [&users_acct_assets_in_tx](auto command) {
+                          if (instanceof<model::TransferAsset>(*command)) {
+                            auto transferAsset =
+                              (model::TransferAsset *) command.get();
+                            users_acct_assets_in_tx.emplace(
+                              transferAsset->src_account_id, transferAsset->asset_id);
+
+                            users_acct_assets_in_tx.emplace(
+                              transferAsset->dest_account_id, transferAsset->asset_id);
+                          } else if (instanceof<model::AddAssetQuantity>(*command)) {
+                            auto addAssetQuantity =
+                              (model::AddAssetQuantity *) command.get();
+                            users_acct_assets_in_tx.emplace(
+                              addAssetQuantity->account_id, addAssetQuantity->asset_id);
+                          }
+                        });
+
+          // to make account_id:height:asset_id -> list of tx indexes (where tx
+          // with certain asset is placed in the block )
+          for (const auto &acct_asset_id : users_acct_assets_in_tx) {
+            // create key to put user's txs with given asset_id
+            const auto &account_id = acct_asset_id.first;
+            const auto &asset_id = acct_asset_id.second;
+            std::string account_assets_key;
+            account_assets_key.append(account_id);
+            account_assets_key.append(":");
+            account_assets_key.append(std::to_string(height));
+            account_assets_key.append(":");
+            account_assets_key.append(asset_id);
+            index_->rpush(account_assets_key, {std::to_string(tx_index)});
+          }
+        }
+
+        // for pagination of GetAccountTransactions() and
+        // GetAccountAssetTransactions(), and for GetTransactions()
+        const auto tx_hash_hex = iroha::hash(tx).to_hexstring();
+        // to make index tx_hash_hex -> list of blocks where his txs exist
+        index_->rpush(tx_hash_hex, {std::to_string(height)});
+
+        // to make index tx_hash_hex:height -> list of tx indexes (where
+        // tx is placed in the block)
+        index_->rpush(tx_hash_hex + ":" + std::to_string(height),
+                      {std::to_string(tx_index)});
       }
     }
 

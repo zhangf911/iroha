@@ -46,7 +46,7 @@ namespace iroha {
       ~MutableStorageImpl() override;
 
      private:
-      void index_block(uint64_t height, model::Block block);
+      void index_block(uint64_t height, const model::Block& block);
 
       hash256_t top_hash_;
       // ordered collection is used to enforce block insertion order in
