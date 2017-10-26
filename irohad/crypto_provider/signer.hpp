@@ -18,23 +18,47 @@
 #ifndef IROHA_BASE_SIGNER_HPP_
 #define IROHA_BASE_SIGNER_HPP_
 
+#include <memory>
 #include <string>
+
+#include <boost/optional.hpp>
+
+// use this algorithm for signer
+#include "crypto/ed25519/ed25519.hpp"
 
 namespace iroha {
   namespace crypto {
 
-    /**
-     * CRTP
-     * @tparam ConcreteSigner
-     */
-    template <typename ConcreteSigner>
     class Signer {
      public:
       using message_t = std::string;
+      using pubkey_t = ed25519::PublicKey;
+      using privkey_t = ed25519::PrivateKey;
+      using signature_t = ed25519::Signature;
+      using keypair_t = ed25519::Keypair;
 
-      auto sign(const message_t &m) const noexcept {
-        return static_cast<ConcreteSigner *>(this)->sign(m);
+      Signer(keypair_t &&kp) : keypair(std::move(kp)) {}
+      Signer(const Signer &other) = delete;
+      Signer(Signer &&other) noexcept : keypair(std::move(other.keypair)) {}
+
+      static boost::optional<Signer> create(const std::string &pub,
+                                            const std::string &priv) {
+        auto kp = keypair_t::create(pub, priv);
+
+        if (kp) {
+          Signer s(std::move(kp.value()));
+          return {};
+        } else {
+          return boost::none;
+        }
       }
+
+      virtual signature_t sign(const message_t &m) const noexcept {
+        return ed25519::sign(m, keypair);
+      }
+
+     protected:
+      const keypair_t keypair;
     };
   }
 }

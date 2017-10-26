@@ -19,19 +19,23 @@
 #define IROHA_BASE_VALIDATOR_HPP_
 
 #include <string>
+#include "crypto/ed25519/ed25519.hpp"
 
 namespace iroha {
   namespace crypto {
 
-    template <typename ConcreteVerifier>
     class Verifier {
      public:
       using message_t = std::string;
+      using pubkey_t = ed25519::PublicKey;
+      using privkey_t = ed25519::PrivateKey;
+      using signature_t = ed25519::Signature;
+      using keypair_t = ed25519::Keypair;
 
-      bool verify(const typename ConcreteVerifier::signature_t &s,
-                  const message_t &m,
-                  const typename ConcreteVerifier::pubkey_t &p) const noexcept {
-        return static_cast<ConcreteVerifier *>(this)->verify(s, m, p);
+      virtual bool verify(const message_t &m,
+                          const pubkey_t &p,
+                          const signature_t &s) const noexcept {
+        return ed25519::verify(m, p, s);
       }
     };
   }

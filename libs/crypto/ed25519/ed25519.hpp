@@ -18,6 +18,7 @@
 #ifndef IROHA_CRYPTO_ED25519_INTERFACE_HPP_
 #define IROHA_CRYPTO_ED25519_INTERFACE_HPP_
 
+#include <memory>
 #include <string>
 #include "crypto/ed25519/keypair.hpp"
 
@@ -33,10 +34,10 @@ namespace iroha {
       bool verify(const message_t &, const PublicKey &, const Signature &);
 
       seed_t generate_seed();
-      seed_t generate_seed(const std::string& passphrase);
+      seed_t generate_seed(const std::string &passphrase);
 
       Keypair generate_keypair();
-      Keypair generate_keypair(const seed_t&);
+      Keypair generate_keypair(const seed_t &);
     }
   }
 }

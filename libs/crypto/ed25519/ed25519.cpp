@@ -45,6 +45,22 @@ namespace iroha {
                                    p.data());
       }
 
+      std::shared_ptr<Signature> sign(const message_t &,
+                                      const std::unique_ptr<Keypair> kp){
+        std::shared_ptr<Signature> s = std::make_shared<Signature>();
+
+        ed25519_sign(s->data(),
+                     reinterpret_cast<const uint8_t *>(m.data()),
+                     m.size(),
+                     kp.pubkey().data(),
+                     kp.privkey().data());
+        return s;
+      }
+
+      bool verify(const message_t &,
+                  const std::shared_ptr<PublicKey>,
+                  const std::shared_ptr<Signature>);
+
       seed_t generate_seed() {
         seed_t seed;
         auto v = prng.get(32);

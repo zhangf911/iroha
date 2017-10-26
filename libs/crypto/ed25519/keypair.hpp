@@ -33,19 +33,23 @@ namespace iroha {
   namespace crypto {
     namespace ed25519 {
 
-      using PrivateKey =
-          BasePrivateKey<std::array<uint8_t, IROHA_ED25519_PRIVKEY_SIZE> >;
+      class PrivateKey
+          : public BasePrivateKey<std::array<uint8_t,
+                                             IROHA_ED25519_PRIVKEY_SIZE> > {};
 
-      using PublicKey =
-          BasePublicKey<std::array<uint8_t, IROHA_ED25519_PUBKEY_SIZE> >;
+      class PublicKey
+          : public BasePublicKey<std::array<uint8_t,
+                                            IROHA_ED25519_PUBKEY_SIZE> > {};
 
-      using Signature =
-          BaseBlob<std::array<uint8_t, IROHA_ED25519_SIGNATURE_SIZE> >;
+      class Signature
+          : public BaseBlob<std::array<uint8_t,
+                                       IROHA_ED25519_SIGNATURE_SIZE> > {};
 
       class Keypair : public BaseKeypair<PublicKey, PrivateKey> {
        public:
         Keypair(PublicKey &&pub, PrivateKey &&priv)
-            : BaseKeypair<PublicKey, PrivateKey>(std::move(pub), std::move(priv)) {}
+            : BaseKeypair<PublicKey, PrivateKey>(std::move(pub),
+                                                 std::move(priv)) {}
 
         static boost::optional<Keypair> create(const std::string &pub,
                                                const std::string &priv) {

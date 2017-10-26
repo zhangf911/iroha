@@ -15,31 +15,28 @@
  * limitations under the License.
  */
 
-#ifndef IROHA_ED25519_SIGNER_HPP_
-#define IROHA_ED25519_SIGNER_HPP_
-
-#include "crypto/ed25519/ed25519.hpp"
+#include <gtest/gtest.h>
 #include "crypto_provider/signer.hpp"
+#include "crypto_provider/verifier.hpp"
 
-namespace iroha {
-  namespace crypto {
+using namespace iroha::crypto;
 
-    namespace ed25519 {
+TEST(Ed25519, SignThenVerify) {
+  ed25519::seed_t seed{};  // filled with zeros
+  auto keypair = ed25519::generate_keypair(seed);
 
-      class Ed25519Signer final : public Signer<Ed25519Signer> {
-       public:
-        Ed25519Signer(ed25519::Keypair &&kp) : keypair(std::move(kp)) {}
+  Signer signer(std::move(keypair));
+  Verifier verifier;
 
-        using pubkey_t = ed25519::PublicKey;
-        using privkey_t = ed25519::PrivateKey;
+  std::string message = R"(
+Let me tell you all a story about a mouse named Lorry
+Yeah, Lorry was a mouse in a big brown house
+She called herself the hoe, with the money money flow
+But fuck that little mouse 'cause I'm an albatraoz
+)";
 
-        ed25519::Signature sign(const message_t &m) const noexcept;
+  auto signature = signer.sign(message);
 
-       private:
-        ed25519::Keypair keypair;
-      };
-    }
-  }
+  ASSERT_TRUE(verifier.verify(message, keypair.pubkey(), signature))
+      << "sign then verify should be true";
 }
-
-#endif  //  IROHA_ED25519_SIGNER_HPP_

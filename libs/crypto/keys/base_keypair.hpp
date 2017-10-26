@@ -39,6 +39,7 @@ namespace iroha {
       }
 
       const Pub &pubkey() const noexcept { return pub_; }
+      Pub pubkey() noexcept { return pub_; }
       const Priv &privkey() const noexcept { return priv_; }
 
       virtual ~BaseKeypair() {}

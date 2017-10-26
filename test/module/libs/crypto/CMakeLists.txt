@@ -34,7 +34,7 @@ target_link_libraries(signature_test
     )
 
 
-AddTest(ed25519_test ed25519_test.cpp)
-target_link_libraries(ed25519_test
-    irohad-ed25519-signer
+AddTest(crypto_test crypto_test.cpp)
+target_link_libraries(crypto_test
+    ${Boost_LIBRARIES}
 )
