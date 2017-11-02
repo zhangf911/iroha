@@ -85,6 +85,7 @@ TEST_F(AmetsuchiTest, SampleTest) {
   CreateAccount createAccount;
   createAccount.account_name = "user1";
   createAccount.domain_id = "ru";
+  createAccount.json_data = "{}";
   txn.commands.push_back(std::make_shared<CreateAccount>(createAccount));
 
   // Compose block
@@ -121,6 +122,7 @@ TEST_F(AmetsuchiTest, SampleTest) {
   createAccount = CreateAccount();
   createAccount.account_name = "user2";
   createAccount.domain_id = "ru";
+  createAccount.json_data = "{}";
   txn.commands.push_back(std::make_shared<CreateAccount>(createAccount));
 
   // Create asset RUB#ru
@@ -290,18 +292,21 @@ TEST_F(AmetsuchiTest, queryGetAccountAssetTransactionsTest) {
   CreateAccount createAccount1;
   createAccount1.account_name = user1name;
   createAccount1.domain_id = domain;
+  createAccount1.json_data = "{}";
   txn.commands.push_back(std::make_shared<CreateAccount>(createAccount1));
 
   // Create account 2
   CreateAccount createAccount2;
   createAccount2.account_name = user2name;
   createAccount2.domain_id = domain;
+  createAccount2.json_data = "{}";
   txn.commands.push_back(std::make_shared<CreateAccount>(createAccount2));
 
   // Create account 3
   CreateAccount createAccount3;
   createAccount3.account_name = user3name;
   createAccount3.domain_id = domain;
+  createAccount3.json_data = "{}";
   txn.commands.push_back(std::make_shared<CreateAccount>(createAccount3));
 
   // Create asset 1
@@ -552,6 +557,7 @@ TEST_F(AmetsuchiTest, AddSignatoryTest) {
   createAccount.account_name = "user1";
   createAccount.domain_id = "domain";
   createAccount.pubkey = pubkey1;
+  createAccount.json_data = "{}";
   txn.commands.push_back(std::make_shared<CreateAccount>(createAccount));
 
   Block block;
@@ -624,6 +630,7 @@ TEST_F(AmetsuchiTest, AddSignatoryTest) {
   createAccount.account_name = "user2";
   createAccount.domain_id = "domain";
   createAccount.pubkey = pubkey1;  // same as user1's pubkey1
+  createAccount.json_data = "{}";
   txn.commands.push_back(std::make_shared<CreateAccount>(createAccount));
 
   block = Block();
