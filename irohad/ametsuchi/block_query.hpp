@@ -41,7 +41,7 @@ namespace iroha {
        * @return observable of Model Transaction
        */
       virtual rxcpp::observable<model::Transaction> getAccountTransactions(
-        const std::string& account_id, const model::Pager& pager) = 0;
+          const std::string& account_id, const model::Pager& pager) = 0;
 
       /**
        * Get asset transactions of an account.
