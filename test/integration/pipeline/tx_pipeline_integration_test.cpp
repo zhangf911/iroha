@@ -28,6 +28,8 @@
 
 using namespace framework::test_subscriber;
 using namespace std::chrono_literals;
+using namespace iroha::model::generators;
+using iroha::model::Transaction;
 
 class TestIrohad : public Irohad {
  public:
@@ -217,5 +219,98 @@ TEST_F(TxPipelineIntegrationTest, TxPipelineTest) {
 
   sendTransactions({tx});
 
+  validate();
+}
+
+/**
+ * @given Admin creates domain usabnk (nba@usabnk) and asset usd,
+ * @when A user ivan in domain of Russia (ivan@ru) wants to possess and
+ *       transfer asset usd#usabnk to user tea in domain of Cambodia (tea@khm).
+ * @then Validate transactions processed.
+ */
+TEST_F(TxPipelineIntegrationTest, TransferAssetTestAmongDomainTest) {
+  const std::string DOMAIN_USABANK = "usabnk";
+  const std::string DOMAIN_RU = "ru";
+  const std::string DOMAIN_KHM = "khm";
+  const std::string USER_DEFAULT_ROLE = "user";
+  const std::string ASSET_USD_NAME = "usd";
+  const std::string ASSET_USD_ID = "usd#" + DOMAIN_USABANK;
+  const std::string NBA_NAME = "nba";
+  const std::string IVAN_NAME = "ivan";
+  const std::string TEA_NAME = "tea";
+  const std::string ADMIN_ID = "admin@test";
+  const std::string NBA_ID = NBA_NAME + "@" + DOMAIN_USABANK;
+  const std::string IVAN_ID = IVAN_NAME + "@" + DOMAIN_RU;
+  const std::string TEA_ID = TEA_NAME + "@" + DOMAIN_KHM;
+
+  auto adminKeypair = iroha::KeysManagerImpl(ADMIN_ID).loadKeys().value();
+  auto ivanKeypair = iroha::KeysManagerImpl(IVAN_ID).loadKeys().value();
+  auto teaKeypair = iroha::KeysManagerImpl(TEA_ID).loadKeys().value();
+
+  // creates default domains and usd asset.
+  auto tx1 = TransactionGenerator().generateTransaction(
+    ADMIN_ID, 1, {
+      CommandGenerator().generateCreateDomain(
+        DOMAIN_USABANK, USER_DEFAULT_ROLE),
+      CommandGenerator().generateCreateAsset(
+        ASSET_USD_ID, DOMAIN_USABANK, 2),
+      CommandGenerator().generateCreateDomain(
+        DOMAIN_RU, USER_DEFAULT_ROLE),
+      CommandGenerator().generateCreateDomain(
+        DOMAIN_KHM, USER_DEFAULT_ROLE),
+    });
+
+
+  iroha::model::ModelCryptoProviderImpl(adminKeypair).sign(tx1);
+  sendTransactions({tx1});
+  validate();
+
+  // ivan creates his account in ru domain
+  auto tx2 = TransactionGenerator().generateTransaction(
+    IVAN_ID, 2, {
+      CommandGenerator().generateCreateAccount(
+        IVAN_NAME, DOMAIN_RU, iroha::pubkey_t{})
+    });
+
+  iroha::model::ModelCryptoProviderImpl(ivanKeypair).sign(tx2);
+  sendTransactions({tx2});
+  validate();
+
+  // tea creates his account in khm domain
+  auto tx3 = TransactionGenerator().generateTransaction(
+    TEA_ID, 3, {
+      CommandGenerator().generateCreateAccount(
+        TEA_NAME, DOMAIN_KHM, iroha::pubkey_t{})
+    });
+
+  iroha::model::ModelCryptoProviderImpl(teaKeypair).sign(tx3);
+  sendTransactions({tx3});
+  validate();
+
+  // AddAssetQuantity to ivan@ru and tea@khm
+  auto tx4 = TransactionGenerator().generateTransaction(
+    ADMIN_ID, 4, {
+      CommandGenerator().generateAddAssetQuantity(
+        IVAN_ID, ASSET_USD_ID,
+        iroha::Amount().createFromString("30.50").value()),
+      CommandGenerator().generateAddAssetQuantity(
+        TEA_ID, ASSET_USD_ID,
+        iroha::Amount().createFromString("50.00").value())
+      });
+
+  iroha::model::ModelCryptoProviderImpl(adminKeypair).sign(tx4);
+  sendTransactions({tx4});
+  validate();
+
+  // transfer asset from ivan@ru to tea@khm
+  auto tx5 = TransactionGenerator().generateTransaction(
+    IVAN_ID, 5, {
+      CommandGenerator().generateTransferAsset(
+        IVAN_ID, TEA_ID, ASSET_USD_ID,
+        iroha::Amount().createFromString("5.50").value())
+    });
+
+  iroha::model::ModelCryptoProviderImpl(ivanKeypair).sign(tx5);
+  sendTransactions({tx5});
   validate();
 }
