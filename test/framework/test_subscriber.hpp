@@ -283,10 +283,10 @@ namespace framework {
        * @param expected_values - expected vector<T> values
        * equals to list from observable
        */
-      EqualToList(std::vector<T> expected_values)
+      EqualToList(std::vector<T> expected_values) noexcept
         : expected_values_(std::move(expected_values)) {}
 
-      EqualToList(EqualToList<T> &&rhs) {
+      EqualToList(EqualToList<T> &&rhs) noexcept {
         std::move(rhs.expected_values_.begin(),
                   rhs.expected_values_.end(),
                   std::back_inserter(expected_values_.begin()));
@@ -295,7 +295,7 @@ namespace framework {
                   std::back_inserter(actual_values_.begin()));
       }
 
-      EqualToList<T> &operator=(EqualToList<T> &&rhs) {
+      EqualToList<T> &operator=(EqualToList<T> &&rhs) noexcept {
         std::move(rhs.expected_values_.begin(),
                   rhs.expected_values_.end(),
                   std::back_inserter(expected_values_.begin()));

@@ -109,31 +109,26 @@ namespace iroha {
         const std::string &account_id,
         const std::vector<std::string> &assets_id,
         const std::shared_ptr<iroha::model::Command> &command) const {
-      const auto hasTransferAsset = searchCommand<model::TransferAsset>(
-          command, [&account_id, &assets_id](const auto &transfer) {
-            const auto cond_src = transfer.src_account_id == account_id;
-            const auto cond_dst = transfer.dest_account_id == account_id;
-            if (not(cond_src) and not(cond_dst)) {
-              return false;
-            }
-            // size of commands should be restricted in stateless validation.
-            return std::any_of(
-                assets_id.begin(), assets_id.end(), [&transfer](auto const &a) {
-                  return a == transfer.asset_id;
-                });
-          });
-
-      const auto hasAddAssetQuantity = searchCommand<model::AddAssetQuantity>(
-          command, [&account_id, &assets_id](const auto &add) {
-            const auto cond_account_id = add.account_id == account_id;
-            const auto cond_has_asset = std::any_of(
-                assets_id.begin(), assets_id.end(), [&add](auto const &a) {
-                  return a == add.asset_id;
-                });
-            return cond_account_id and cond_has_asset;
-          });
-
-      return hasTransferAsset or hasAddAssetQuantity;
+      return searchCommand<model::TransferAsset>(
+                 command,
+                 [&account_id, &assets_id](const auto &transfer) {
+                   return (transfer.src_account_id == account_id
+                           or transfer.dest_account_id == account_id)
+                       and std::any_of(assets_id.begin(),
+                                       assets_id.end(),
+                                       [&transfer](auto const &a) {
+                                         return a == transfer.asset_id;
+                                       });
+                 })
+          or searchCommand<model::AddAssetQuantity>(
+                 command, [&account_id, &assets_id](const auto &add) {
+                   return add.account_id == account_id
+                       and std::any_of(assets_id.begin(),
+                                       assets_id.end(),
+                                       [&add](auto const &a) {
+                                         return a == add.asset_id;
+                                       });
+                 });
     }
 
     rxcpp::observable<model::Transaction>
