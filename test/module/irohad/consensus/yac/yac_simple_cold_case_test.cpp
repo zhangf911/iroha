@@ -72,6 +72,11 @@ TEST_F(YacTest, YacWhenVoting) {
   EXPECT_CALL(*network, send_vote(_, _)).Times(default_peers.size());
 
   YacHash my_hash("my_proposal_hash", "my_block_hash");
+  auto peer = default_peers.at(0);
+
+  EXPECT_CALL(*crypto, getVote(_))
+      .WillOnce(Return(create_vote(my_hash, peer.pubkey.to_string())));
+
   yac->vote(my_hash, ClusterOrdering(default_peers));
 }
 
@@ -98,7 +103,8 @@ TEST_F(YacTest, YacWhenColdStartAndAchieveOneVote) {
   YacHash received_hash("my_proposal", "my_block");
   auto peer = default_peers.at(0);
   // assume that our peer receive message
-  network->notification->on_vote(peer, crypto->getVote(received_hash));
+  network->notification->on_vote(
+      peer, create_vote(received_hash, peer.pubkey.to_string()));
 
   ASSERT_TRUE(wrapper.validate());
 }
@@ -128,7 +134,8 @@ TEST_F(YacTest, YacWhenColdStartAndAchieveSupermajorityOfVotes) {
 
   YacHash received_hash("my_proposal", "my_block");
   for (auto &peer : default_peers) {
-    network->notification->on_vote(peer, crypto->getVote(received_hash));
+    network->notification->on_vote(
+        peer, create_vote(received_hash, peer.pubkey.to_string()));
   }
 
   ASSERT_TRUE(wrapper.validate());
@@ -160,11 +167,8 @@ TEST_F(YacTest, YacWhenColdStartAndAchieveCommitMessage) {
 
   auto committed_peer = default_peers.at(0);
   auto msg = CommitMessage();
-  uint64_t number_of_peer = 0;
   for (auto &peer : default_peers) {
-    (void) peer;
-    msg.votes.push_back(create_vote(propagated_hash,
-                                    std::to_string(number_of_peer++)));
+    msg.votes.push_back(create_vote(propagated_hash, peer.pubkey.to_string()));
   }
   network->notification->on_commit(committed_peer, msg);
 

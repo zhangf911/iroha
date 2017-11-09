@@ -66,10 +66,16 @@ TEST_F(YacTest, ValidCaseWhenReceiveSupermajority) {
   EXPECT_CALL(*crypto, verify(An<VoteMessage>())).WillRepeatedly(Return(true));
 
   YacHash my_hash("proposal_hash", "block_hash");
+
+  EXPECT_CALL(*crypto, getVote(_))
+      .WillOnce(
+          Return(create_vote(my_hash, my_peers.at(3).pubkey.to_string())));
+
   yac->vote(my_hash, my_order);
 
-  for (auto i = 0; i < 3; ++i) {
-    yac->on_vote(my_peers.at(i), create_vote(my_hash, std::to_string(i)));
+  for (auto i = 0u; i < 3; ++i) {
+    yac->on_vote(my_peers.at(i),
+                 create_vote(my_hash, my_peers.at(i).pubkey.to_string()));
   };
 }
 
@@ -111,12 +117,16 @@ TEST_F(YacTest, ValidCaseWhenReceiveCommit) {
   EXPECT_CALL(*crypto, verify(An<RejectMessage>())).Times(0);
   EXPECT_CALL(*crypto, verify(An<VoteMessage>())).WillRepeatedly(Return(true));
 
+  EXPECT_CALL(*crypto, getVote(_))
+      .WillOnce(
+          Return(create_vote(my_hash, my_peers.at(3).pubkey.to_string())));
+
   yac->vote(my_hash, my_order);
 
   auto votes = std::vector<VoteMessage>();
 
-  for (auto i = 0; i < 4; ++i) {
-    votes.push_back(create_vote(my_hash, std::to_string(i)));
+  for (auto i = 0u; i < 4; ++i) {
+    votes.push_back(create_vote(my_hash, my_peers.at(i).pubkey.to_string()));
   };
   yac->on_commit(my_peers.at(0), CommitMessage(votes));
   ASSERT_TRUE(wrapper.validate());
@@ -160,19 +170,23 @@ TEST_F(YacTest, ValidCaseWhenReceiveCommitTwice) {
   EXPECT_CALL(*crypto, verify(An<RejectMessage>())).Times(0);
   EXPECT_CALL(*crypto, verify(An<VoteMessage>())).WillRepeatedly(Return(true));
 
+  EXPECT_CALL(*crypto, getVote(_))
+      .WillOnce(
+          Return(create_vote(my_hash, my_peers.at(3).pubkey.to_string())));
+
   yac->vote(my_hash, my_order);
 
   auto votes = std::vector<VoteMessage>();
 
   // first commit
-  for (auto i = 0; i < 3; ++i) {
-    votes.push_back(create_vote(my_hash, std::to_string(i)));
+  for (auto i = 0u; i < 3; ++i) {
+    votes.push_back(create_vote(my_hash, my_peers.at(i).pubkey.to_string()));
   };
   yac->on_commit(my_peers.at(0), CommitMessage(votes));
 
   // second commit
-  for (auto i = 1; i < 4; ++i) {
-    votes.push_back(create_vote(my_hash, std::to_string(i)));
+  for (auto i = 1u; i < 4; ++i) {
+    votes.push_back(create_vote(my_hash, my_peers.at(i).pubkey.to_string()));
   };
   yac->on_commit(my_peers.at(1), CommitMessage(votes));
 
@@ -218,9 +232,13 @@ TEST_F(YacTest, ValidCaseWhenSoloConsensus) {
     cout << "catched" << endl;
   });
 
+  EXPECT_CALL(*crypto, getVote(_))
+      .WillOnce(
+          Return(create_vote(my_hash, my_peers.at(0).pubkey.to_string())));
+
   yac->vote(my_hash, my_order);
 
-  auto vote_message = create_vote(my_hash, std::to_string(0));
+  auto vote_message = create_vote(my_hash, my_peers.at(0).pubkey.to_string());
 
   yac->on_vote(my_peers.at(0), vote_message);
 
@@ -264,10 +282,14 @@ TEST_F(YacTest, ValidCaseWhenVoteAfterCommit) {
 
   std::vector<VoteMessage> votes;
 
-  for (auto i = 0; i < 3; ++i) {
-    votes.push_back(create_vote(my_hash, std::to_string(i)));
+  for (auto i = 0u; i < 3; ++i) {
+    votes.push_back(create_vote(my_hash, my_peers.at(i).pubkey.to_string()));
   };
   yac->on_commit(my_peers.at(0), CommitMessage(votes));
+
+  EXPECT_CALL(*crypto, getVote(_))
+      .WillOnce(
+          Return(create_vote(my_hash, my_peers.at(3).pubkey.to_string())));
 
   yac->vote(my_hash, my_order);
 }

@@ -33,14 +33,15 @@ namespace iroha {
       model::Peer mk_peer(std::string address) {
         model::Peer peer;
         peer.address = address;
+        std::copy(address.begin(), address.end(), peer.pubkey.begin());
         return peer;
       }
 
       VoteMessage create_vote(YacHash hash, std::string pub_key) {
         VoteMessage vote;
         vote.hash = hash;
-        std::copy(pub_key.begin(), pub_key.end(),
-                  vote.signature.pubkey.begin());
+        std::copy(
+            pub_key.begin(), pub_key.end(), vote.signature.pubkey.begin());
         return vote;
       }
 
@@ -49,12 +50,7 @@ namespace iroha {
         MOCK_METHOD1(verify, bool(CommitMessage));
         MOCK_METHOD1(verify, bool(RejectMessage));
         MOCK_METHOD1(verify, bool(VoteMessage));
-
-        VoteMessage getVote(YacHash hash) override {
-          VoteMessage vote;
-          vote.hash = hash;
-          return vote;
-        }
+        MOCK_METHOD1(getVote, VoteMessage(YacHash));
 
         MockYacCryptoProvider() = default;
 
