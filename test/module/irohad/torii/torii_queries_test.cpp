@@ -31,8 +31,6 @@ limitations under the License.
 constexpr const char *Ip = "0.0.0.0";
 constexpr int Port = 50051;
 
-constexpr size_t TimesToriiBlocking = 5;
-constexpr size_t TimesToriiNonBlocking = 5;
 constexpr size_t TimesFind = 1;
 
 using ::testing::Return;
@@ -55,6 +53,7 @@ class ToriiQueriesTest : public testing::Test {
       statelessValidatorMock = std::make_shared<MockStatelessValidator>();
       wsv_query = std::make_shared<MockWsvQuery>();
       block_query = std::make_shared<MockBlockQuery>();
+      storageMock = std::make_shared<MockStorage>();
 
       rxcpp::subjects::subject<iroha::model::Proposal> prop_notifier;
       rxcpp::subjects::subject<Commit> commit_notifier;
@@ -72,7 +71,7 @@ class ToriiQueriesTest : public testing::Test {
           std::make_shared<iroha::model::converters::PbTransactionFactory>();
 
       auto command_service =
-          std::make_unique<torii::CommandService>(pb_tx_factory, tx_processor);
+          std::make_unique<torii::CommandService>(pb_tx_factory, tx_processor, storageMock);
 
       //----------- Query Service ----------
 
@@ -108,6 +107,7 @@ class ToriiQueriesTest : public testing::Test {
 
   std::shared_ptr<MockPeerCommunicationService> pcsMock;
   std::shared_ptr<MockStatelessValidator> statelessValidatorMock;
+  std::shared_ptr<MockStorage> storageMock;
 
   std::shared_ptr<MockWsvQuery> wsv_query;
   std::shared_ptr<MockBlockQuery> block_query;

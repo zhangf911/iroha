@@ -19,23 +19,37 @@
 #define IROHA_REDIS_FLAT_BLOCK_QUERY_HPP
 
 #include <cpp_redis/redis_client.hpp>
+#include "ametsuchi/block_query.hpp"
 #include "ametsuchi/impl/flat_file/flat_file.hpp"
-#include "ametsuchi/impl/flat_file_block_query.hpp"
 
 #include "model/converters/json_block_factory.hpp"
 
+#include <boost/optional.hpp>
+
 namespace iroha {
   namespace ametsuchi {
-    class RedisFlatBlockQuery : public FlatFileBlockQuery {
+    /**
+     * Class which implements BlockQuery with a Redis backend.
+     */
+    class RedisBlockQuery : public BlockQuery {
      public:
-      RedisFlatBlockQuery(cpp_redis::redis_client &client,
-                          FlatFile &file_store);
+      RedisBlockQuery(cpp_redis::redis_client &client, FlatFile &file_store);
 
       rxcpp::observable<model::Transaction> getAccountTransactions(
-          std::string account_id) override;
+          const std::string &account_id) override;
 
       rxcpp::observable<model::Transaction> getAccountAssetTransactions(
-          std::string account_id, std::string asset_id) override;
+          const std::string &account_id, const std::string &asset_id) override;
+
+      boost::optional<model::Transaction> getTxByHashSync(
+          const std::string &hash) override;
+
+      rxcpp::observable<model::Block> getBlocks(uint32_t height,
+                                                uint32_t count) override;
+
+      rxcpp::observable<model::Block> getBlocksFrom(uint32_t height) override;
+
+      rxcpp::observable<model::Block> getTopBlocks(uint32_t count) override;
 
      private:
       /**
@@ -43,7 +57,16 @@ namespace iroha {
        * @param account_id
        * @return vector of block ids
        */
-      std::vector<uint64_t> getBlockIds(const std::string &account_id);
+      std::vector<iroha::model::Block::BlockHeightType> getBlockIds(
+          const std::string &account_id);
+
+      /**
+       * Returns block id which contains transaction with a given hash
+       * @param hash - hash of transaction
+       * @return block id or boost::none
+       */
+      boost::optional<iroha::model::Block::BlockHeightType> getBlockId(
+          const std::string &hash);
 
       /**
        * creates callback to lrange query to redis to supply result to
@@ -55,7 +78,9 @@ namespace iroha {
       std::function<void(cpp_redis::reply &)> callbackToLrange(
           const rxcpp::subscriber<model::Transaction> &s, uint64_t block_id);
 
+      FlatFile &block_store_;
       cpp_redis::redis_client &client_;
+      model::converters::JsonBlockFactory serializer_;
     };
   }  // namespace ametsuchi
 }  // namespace iroha

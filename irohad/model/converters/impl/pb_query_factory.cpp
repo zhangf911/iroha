@@ -99,7 +99,6 @@ namespace iroha {
               break;
             }
             case Query_Payload::QueryCase::kGetRoles: {
-              // Convert to get Roles
               val = std::make_shared<GetRoles>();
               break;
             }
@@ -139,6 +138,7 @@ namespace iroha {
         auto pl = pb_query.mutable_payload();
         pl->set_creator_account_id(query->creator_account_id);
         pl->set_created_time(query->created_ts);
+        pl->set_query_counter(query->query_counter);
         // Set signatures
         auto sig = pb_query.mutable_signature();
         sig->set_signature(query->signature.signature.to_string());
@@ -165,7 +165,7 @@ namespace iroha {
         auto pb_query_mut = pl->mutable_get_account();
         pb_query_mut->set_account_id(account_id);
         return pb_query;
-      };
+      }
 
       protocol::Query PbQueryFactory::serializeGetAccountAssets(
           std::shared_ptr<const Query> query) const {
@@ -177,7 +177,7 @@ namespace iroha {
         pb_query_mut->set_account_id(tmp->account_id);
         pb_query_mut->set_asset_id(tmp->asset_id);
         return pb_query;
-      };
+      }
 
       protocol::Query PbQueryFactory::serializeGetAccountTransactions(
           std::shared_ptr<const Query> query) const {
