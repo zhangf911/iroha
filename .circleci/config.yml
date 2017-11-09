@@ -3,7 +3,6 @@ defaults: &defaults
   environment:
     IROHA_HOME: /opt/iroha
     IROHA_BUILD: /opt/iroha/build
-    CCACHE_DIR: ~/.ccache
 
 version: 2
 
@@ -18,8 +17,8 @@ jobs:
       - checkout
       - restore_cache:
           keys:
-            - build-cache-{{ arch }}-{{ .Branch }}
-            - build-cache-{{ arch }}
+            - build-cache-linux-{{ .Branch }}
+            - build-cache-linux-
           paths:
             - ~/.ccache
       - run:
@@ -35,7 +34,11 @@ jobs:
           command: |
             cmake --build $IROHA_BUILD -- -j4
       - save_cache:
-          key: build-cache-{{ arch }}-{{ .Branch }}-{{ epoch }}
+          key: build-cache-linux-{{ .Branch }}-{{ epoch }}
+          paths:
+            - ~/.ccache
+      - save_cache:
+          key: build-cache-linux-{{ epoch }}
           paths:
             - ~/.ccache
       - run: ccache --show-stats
@@ -148,13 +151,14 @@ jobs:
             - Library/Caches/Homebrew
       - restore_cache:
           keys:
-            - build-cache-{{ arch }}-{{ .Branch }}
+            - build-cache-macos-{{ .Branch }}
+            - build-cache-macos-
           paths:
             - ~/.ccache
       - restore_cache:
           keys:
-            - external-{{ arch }}-{{ .Branch }}
-            - external-{{ arch }}
+            - external-macos-{{ .Branch }}
+            - external-macos-
           paths:
             - external
       - run: ccache --show-stats
@@ -164,16 +168,24 @@ jobs:
             cmake -H. -Bbuild
             cmake --build build -- -j$(sysctl -n hw.ncpu)
       - save_cache:
-          key: build-cache-{{ arch }}-{{ .Branch }}-{{ epoch }}
+          key: build-cache-macos-{{ .Branch }}-{{ epoch }}
           paths:
             - ~/.ccache
       - save_cache:
-          key: external-{{ arch }}-{{ .Branch }}-{{ epoch }}
+          key: build-cache-macos-{{ epoch }}
+          paths:
+            - ~/.ccache
+      - save_cache:
+          key: external-macos-{{ .Branch }}-{{ epoch }}
+          paths:
+            - external
+      - save_cache:
+          key: external-macos-{{ epoch }}
           paths:
             - external
 
       - run: ccache --show-stats
-     
+
 
 workflows:
   version: 2
