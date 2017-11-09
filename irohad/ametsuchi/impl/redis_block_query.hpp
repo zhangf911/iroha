@@ -19,6 +19,7 @@
 #define IROHA_REDIS_FLAT_BLOCK_QUERY_HPP
 
 #include <cpp_redis/redis_client.hpp>
+#include <stdexcept>
 #include "ametsuchi/block_query.hpp"
 #include "ametsuchi/impl/flat_file/flat_file.hpp"
 
@@ -35,11 +36,22 @@ namespace iroha {
      public:
       RedisBlockQuery(cpp_redis::redis_client &client, FlatFile &file_store);
 
-      //TODO 09/11/17 motxx - Fix interface when applying pager with RedisBlockQuery
+      //TODO 09/11/17 motxx - Fix get transaction methods when applying pager with RedisBlockQuery
+      rxcpp::observable<model::Transaction> getAccountTransactions(
+        const std::string& account_id, const model::Pager& pager) {
+        throw std::runtime_error("Not implemented");
+      }
+
+      rxcpp::observable<model::Transaction>
+      getAccountAssetTransactions(const std::string& account_id,
+                                  const std::vector<std::string>& assets_id,
+                                  const model::Pager& pager) override {
+        throw std::runtime_error("Not implemented");
+      }
+
       rxcpp::observable<model::Transaction> getAccountTransactions(
           const std::string &account_id);// override;
 
-      //TODO 09/11/17 motxx - Fix interface when applying pager with RedisBlockQuery
       rxcpp::observable<model::Transaction> getAccountAssetTransactions(
           const std::string &account_id, const std::string &asset_id);// override;
 
